@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440" role="img" aria-labelledby="title desc">
+  <title id="title">reWear — Good clothes deserve a second life</title>
+  <desc id="desc">Minimal editorial-style banner in warm cream and forest green for a sustainable clothing exchange platform.</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F5F1E8"/>
+      <stop offset="1" stop-color="#E7E8D9"/>
+    </linearGradient>
+    <pattern id="grain" width="90" height="90" patternUnits="userSpaceOnUse">
+      <circle cx="8" cy="12" r="0.7" fill="#244C3A" opacity=".11"/>
+      <circle cx="54" cy="38" r="0.6" fill="#244C3A" opacity=".09"/>
+      <circle cx="29" cy="76" r="0.5" fill="#244C3A" opacity=".08"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="440" rx="22" fill="url(#paper)"/>
+  <rect width="1200" height="440" rx="22" fill="url(#grain)"/>
+  <rect x="42" y="38" width="1116" height="364" rx="14" fill="none" stroke="#244C3A" stroke-opacity=".22"/>
+  <text x="78" y="91" fill="#244C3A" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" letter-spacing="4">REWEAR®  /  CIRCULAR FASHION</text>
+  <path d="M78 112 H1122" stroke="#244C3A" stroke-opacity=".28"/>
+  <text x="76" y="204" fill="#244C3A" font-family="Georgia, 'Times New Roman', serif" font-size="65" font-weight="bold">Good clothes</text>
+  <text x="76" y="274" fill="#244C3A" font-family="Georgia, 'Times New Roman', serif" font-size="65" font-weight="bold">deserve a second life.</text>
+  <text x="80" y="322" fill="#4D6253" font-family="Arial, Helvetica, sans-serif" font-size="21">Discover. Exchange. Rewear.</text>
+  <text x="80" y="365" fill="#4D6253" font-family="Arial, Helvetica, sans-serif" font-size="12" letter-spacing="3">LESS WASTE  ·  MORE MEANING  ·  BETTER FASHION</text>
+  <g transform="translate(910 165)">
+    <circle cx="100" cy="85" r="92" fill="#D5DDCB"/>
+    <circle cx="100" cy="85" r="72" fill="none" stroke="#244C3A" stroke-opacity=".25"/>
+    <path d="M100 137 C54 108 49 69 72 49 C91 33 106 53 100 72 C113 44 143 45 151 68 C163 103 128 126 100 137Z" fill="#244C3A"/>
+    <path d="M100 136 C100 105 107 83 135 62" fill="none" stroke="#F5F1E8" stroke-width="3" stroke-linecap="round"/>
+    <path d="M100 111 C84 92 76 79 73 61" fill="none" stroke="#F5F1E8" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <text x="1080" y="374" fill="#244C3A" font-family="Arial, Helvetica, sans-serif" font-size="12" text-anchor="end" letter-spacing="2">A MORE THOUGHTFUL WARDROBE</text>
+</svg>
