@@ -11,25 +11,26 @@ const pool: mysql.Pool = ((globalThis as any).__rewearPool ??= mysql.createPool(
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME || 'rewear',
-  ssl: process.env.DB_SSL === 'false' ? undefined : { minVersion: 'TLSv1.2', rejectUnauthorized: true },
+  ssl: process.env.DB_SSL === 'false' ? undefined : { minVersion: 'TLSv1.2', rejectUnauthorized: process.env.DB_SSL_STRICT !== 'false' },
   waitForConnections: true,
-  connectionLimit: 5,
+  connectionLimit: Number(process.env.DB_POOL || 3), maxIdle: 1, idleTimeout: 10000, connectTimeout: 10000, enableKeepAlive: true,
   timezone: 'Z',
 }));
 
-const SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+// Production must set JWT_SECRET (checked lazily so `next build` never fails on it)
+const secret = () => { const s = process.env.JWT_SECRET; if (!s && process.env.NODE_ENV === 'production') throw new Error('JWT_SECRET is not set'); return s || 'dev-secret-change-me'; };
 // Roles live in the DB (user.role). Nothing in env or request bodies can grant a role.
 
 // ---------- tiny JWT (HS256) ----------
 const b64 = (o: any) => Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toString('base64url');
 function sign(uid: number) {
   const h = b64({ alg: 'HS256', typ: 'JWT' }), p = b64({ uid, exp: Date.now() + 7 * 864e5 });
-  return `${h}.${p}.${crypto.createHmac('sha256', SECRET).update(`${h}.${p}`).digest('base64url')}`;
+  return `${h}.${p}.${crypto.createHmac('sha256', secret()).update(`${h}.${p}`).digest('base64url')}`;
 }
 function verify(tok?: string): number | null {
   try {
     const [h, p, s] = (tok || '').split('.');
-    const good = crypto.createHmac('sha256', SECRET).update(`${h}.${p}`).digest('base64url');
+    const good = crypto.createHmac('sha256', secret()).update(`${h}.${p}`).digest('base64url');
     if (s.length !== good.length || !crypto.timingSafeEqual(Buffer.from(s), Buffer.from(good))) return null;
     const d = JSON.parse(Buffer.from(p, 'base64url').toString());
     return d.exp > Date.now() ? d.uid : null;
