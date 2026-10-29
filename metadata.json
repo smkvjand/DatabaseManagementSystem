@@ -1,0 +1,8 @@
+{
+  "name": "reWear — Sustainable Clothing Exchange Platform",
+  "description": "A campus circular wardrobe marketplace to buy pre-loved clothes, propose 1:1 barter swaps, and donate to verified student clothing banks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
