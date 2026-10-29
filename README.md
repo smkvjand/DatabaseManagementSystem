@@ -5,7 +5,7 @@
 ```{=html}
 </p>
 ```
-```{=html}
+```{=html}.  
 <p align="center">
 ```
 `<em>`{=html}A sustainable clothing exchange platform for giving
