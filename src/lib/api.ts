@@ -11,29 +11,28 @@ const pool: mysql.Pool = ((globalThis as any).__rewearPool ??= mysql.createPool(
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME || 'rewear',
-  ssl: process.env.DB_SSL === 'false' ? undefined : { minVersion: 'TLSv1.2', rejectUnauthorized: process.env.DB_SSL_STRICT !== 'false' },
+  ssl: process.env.DB_SSL === 'false' ? undefined : { minVersion: 'TLSv1.2', rejectUnauthorized: true },
   waitForConnections: true,
-  connectionLimit: Number(process.env.DB_POOL || 3), maxIdle: 1, idleTimeout: 10000, connectTimeout: 10000, enableKeepAlive: true,
+  connectionLimit: 5,
   timezone: 'Z',
 }));
 
-// Production must set JWT_SECRET (checked lazily so `next build` never fails on it)
-const secret = () => { const s = process.env.JWT_SECRET; if (!s && process.env.NODE_ENV === 'production') throw new Error('JWT_SECRET is not set'); return s || 'dev-secret-change-me'; };
+const SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 // Roles live in the DB (user.role). Nothing in env or request bodies can grant a role.
 
 // ---------- tiny JWT (HS256) ----------
 const b64 = (o: any) => Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toString('base64url');
-function sign(uid: number) {
-  const h = b64({ alg: 'HS256', typ: 'JWT' }), p = b64({ uid, exp: Date.now() + 7 * 864e5 });
-  return `${h}.${p}.${crypto.createHmac('sha256', secret()).update(`${h}.${p}`).digest('base64url')}`;
+function sign(uid: number, ch = false) {
+  const h = b64({ alg: 'HS256', typ: 'JWT' }), p = b64({ uid, ...(ch ? { ch: 1 } : {}), exp: Date.now() + 7 * 864e5 }); // ch = token issued by Charity Login
+  return `${h}.${p}.${crypto.createHmac('sha256', SECRET).update(`${h}.${p}`).digest('base64url')}`;
 }
-function verify(tok?: string): number | null {
+function verify(tok?: string): { uid: number; ch: boolean } | null {
   try {
     const [h, p, s] = (tok || '').split('.');
-    const good = crypto.createHmac('sha256', secret()).update(`${h}.${p}`).digest('base64url');
+    const good = crypto.createHmac('sha256', SECRET).update(`${h}.${p}`).digest('base64url');
     if (s.length !== good.length || !crypto.timingSafeEqual(Buffer.from(s), Buffer.from(good))) return null;
     const d = JSON.parse(Buffer.from(p, 'base64url').toString());
-    return d.exp > Date.now() ? d.uid : null;
+    return d.exp > Date.now() ? { uid: d.uid, ch: d.ch === 1 } : null;
   } catch { return null; }
 }
 
@@ -97,7 +96,7 @@ async function categoryId(c: any, ref: string): Promise<number> {
 }
 
 // ---------- bootstrap: whole read model in UI shape ----------
-async function bootstrap(uid: number) {
+async function bootstrap(uid: number, charitySession = false) {
   const [users, cats, items, imgs, thrift, orders, reqs, exch, found, progs, dons, revs, wl, prefs, dop, msgs] = await Promise.all([
     q('SELECT u.user_id,u.name,u.email,u.role,u.foundation_id,u.created_at,l.city FROM `user` u LEFT JOIN location l ON l.location_id=u.location_id'),
     q('SELECT * FROM category ORDER BY category_id'),
@@ -177,6 +176,7 @@ async function bootstrap(uid: number) {
       id: String(f.foundation_id), name: f.foundation_name, tagline: p?.target_beneficiaries || f.cause_area,
       description: f.description, mission: p?.program_description || f.description, category: f.cause_area,
       contactEmail: f.contact_email, phone: f.website_url || '', verified: f.status === 'active',
+      location: f.service_area || '', hostUserId: users.find((u) => u.foundation_id === f.foundation_id && roleOf(u.role) === 'charity')?.user_id?.toString(),
       logoUrl: avatar(f.foundation_name), totalKgReceived: Math.round((kgDon[f.foundation_id] || 0) * 10) / 10,
       activeCampaign: p?.program_name || 'General clothing drive',
     };
@@ -233,7 +233,7 @@ async function bootstrap(uid: number) {
   };
 
   return {
-    me: String(uid), users: usersUi,
+    me: String(uid), charitySession, users: usersUi,
     categories: cats.map((c) => ({ id: 'cat-' + slug(c.category_name), name: c.category_name, slug: slug(c.category_name), description: `${c.category_name} from fellow students`, itemCount: live.filter((i) => i.category_id === c.category_id && i.status === 'available').length })),
     clothingItems: live.map(clothing), listings, orders: ordersUi, exchanges, charities, donations, reviews, impact, notifications, dropBoxes: dop.map(dropUi), messages: msgs.map(msgUi),
     wishlist: wl.map((w) => ({ id: `w-${w.wishlist_id}-${w.item_id}`, userId: String(uid), listingId: String(w.item_id), addedAt: iso(w.added_at) })),
@@ -242,13 +242,25 @@ async function bootstrap(uid: number) {
 }
 
 // ---------- routes ----------
-type Ctx = { uid: number; body: any; params: string[]; isAdmin: boolean; role: Role; foundationId: number | null };
+type Ctx = { uid: number; body: any; params: string[]; isAdmin: boolean; role: Role; foundationId: number | null; charitySession: boolean };
 const routes: [string, RegExp, (c: Ctx) => Promise<any>][] = [];
 const R = (m: string, p: string, f: (c: Ctx) => Promise<any>) => routes.push([m, new RegExp(`^${p}$`), f]);
 
 const assertOwnerOrAdmin = (ownerId: number, c: Ctx) => { if (ownerId !== c.uid && !c.isAdmin) throw new HttpError(403, 'Not allowed'); };
 
-R('GET', '/api/bootstrap', async (c) => bootstrap(c.uid));
+R('GET', '/api/bootstrap', async (c) => bootstrap(c.uid, c.charitySession));
+
+// ---------- charity hosting: ONLY accounts signed in through Charity Login (token claim ch) with role=charity ----------
+R('PATCH', '/api/charity/me', async (c) => {
+  if (!c.charitySession || c.role !== 'charity' || c.foundationId == null) throw new HttpError(403, 'Only charity accounts signed in through Charity Login can manage a charity');
+  const b = c.body, sets: string[] = [], vals: any[] = [];
+  const f: [string, string, number][] = [['name', 'foundation_name', 100], ['description', 'description', 2000], ['category', 'cause_area', 50], ['location', 'service_area', 50], ['contactEmail', 'contact_email', 254], ['website', 'website_url', 255]];
+  for (const [k, col, max] of f) if (b[k] !== undefined) { const v = String(b[k]).trim().slice(0, max); if (k === 'name' && !v) throw new HttpError(400, 'Charity name required'); sets.push(`${col}=?`); vals.push(v); }
+  if (!sets.length) throw new HttpError(400, 'Nothing to update');
+  try { await q(`UPDATE charity_foundation SET ${sets.join(', ')} WHERE foundation_id=?`, [...vals, c.foundationId]); }
+  catch (e: any) { if (e.code === 'ER_DUP_ENTRY') throw new HttpError(409, 'A charity with that name already exists'); throw e; }
+  return { ok: true };
+});
 
 R('POST', '/api/listings', async (c) => {
   const { item: it, listing: l } = c.body;
@@ -513,7 +525,23 @@ R('PATCH', '/api/users/(\\d+)/role', async (c) => {
 // ---------- entry ----------
 async function auth(path: string, body: any) {
   const email = String(body.email || '').trim().toLowerCase(), pw = String(body.password || '');
-  if (path.endsWith('register')) {
+  if (path.endsWith('register-charity')) { // creates a charity host account + its public charity profile
+    const name = String(body.charityName || '').trim().slice(0, 100), desc = String(body.description || '').trim().slice(0, 2000);
+    if (!name || !desc || !email.includes('@') || pw.length < 6) throw new HttpError(400, 'Charity name, description, valid email and 6+ char password required');
+    if ((await q('SELECT 1 FROM `user` WHERE email=?', [email])).length) throw new HttpError(409, 'Email already registered');
+    if ((await q('SELECT 1 FROM charity_foundation WHERE foundation_name=?', [name])).length) throw new HttpError(409, 'A charity with that name already exists');
+    const id = await tx(async (cn) => {
+      const fid = await ins(cn, 'charity_foundation', 'foundation_id', {
+        foundation_name: name, description: desc, cause_area: String(body.category || 'Clothing').trim().slice(0, 50), service_area: String(body.location || '').trim().slice(0, 50),
+        contact_email: email, website_url: String(body.website || '').trim().slice(0, 255), status: 'active',
+      });
+      return ins(cn, 'user', 'user_id', {
+        location_id: await locationId(cn, body.location), name: name.slice(0, 50), email, password_hash: await bcrypt.hash(pw, 10), created_at: new Date(),
+        role: await dbRole('charity'), foundation_id: fid,
+      });
+    });
+    return { token: sign(id, true) };
+  }  if (path.endsWith('register')) {
     if (!body.name?.trim() || !email.includes('@') || pw.length < 6) throw new HttpError(400, 'Name, valid email and 6+ char password required');
     if ((await q('SELECT 1 FROM `user` WHERE email=?', [email])).length) throw new HttpError(409, 'Email already registered');
     const id = await tx(async (cn) => ins(cn, 'user', 'user_id', {
@@ -522,9 +550,21 @@ async function auth(path: string, body: any) {
     }));
     return { token: sign(id) };
   }
-  const [u] = await q('SELECT user_id,password_hash FROM `user` WHERE email=?', [email]);
+  const [u] = await q('SELECT user_id,password_hash,role,foundation_id FROM `user` WHERE email=?', [email]);
   if (!u || !u.password_hash || !(await bcrypt.compare(pw, u.password_hash))) throw new HttpError(401, 'Invalid email or password');
+  if (body.accountType === 'charity') { // Charity Login: same credentials check, but only charity accounts pass
+    if (roleOf(u.role) !== 'charity' || u.foundation_id == null) throw new HttpError(401, 'Invalid email or password, or not a charity account');
+    return { token: sign(u.user_id, true) };
+  }
   return { token: sign(u.user_id) };
+}
+
+async function publicCharities() {
+  const rows = await q("SELECT f.*, (SELECT user_id FROM `user` u WHERE u.foundation_id=f.foundation_id LIMIT 1) AS host_id, (SELECT program_name FROM charity_program p WHERE p.foundation_id=f.foundation_id AND p.status='active' LIMIT 1) AS campaign FROM charity_foundation f WHERE f.status='active' ORDER BY f.foundation_id");
+  return rows.map((f) => ({
+    id: String(f.foundation_id), name: f.foundation_name, description: f.description || '', category: f.cause_area || '', location: f.service_area || '',
+    contactEmail: f.contact_email || '', website: f.website_url || '', logoUrl: avatar(f.foundation_name), activeCampaign: f.campaign || '', hostUserId: f.host_id ? String(f.host_id) : undefined,
+  }));
 }
 
 export async function handle(method: string, url: string, body: any, authHeader: string): Promise<[number, any]> {
@@ -532,17 +572,19 @@ export async function handle(method: string, url: string, body: any, authHeader:
     const path = (url || '').split('?')[0].replace(/\/+$/, '');
     body ||= {};
     if (path === '/api/health') return [200, { status: 'ok', db: (await q('SELECT 1 AS ok'))[0].ok === 1 }];
-    if (method === 'POST' && /^\/api\/auth\/(login|register)$/.test(path)) return [200, await auth(path, body)];
+    if (method === 'POST' && /^\/api\/auth\/(login|register|register-charity)$/.test(path)) return [200, await auth(path, body)];
 
-    const uid = verify(authHeader.replace('Bearer ', ''));
-    if (!uid) throw new HttpError(401, 'Not signed in');
+    if (method === 'GET' && path === '/api/public/charities') return [200, await publicCharities()]; // no sign-in needed; no private account data
+    const session = verify(authHeader.replace('Bearer ', ''));
+    if (!session) throw new HttpError(401, 'Not signed in');
+    const uid = session.uid;
     const [me] = await q('SELECT role, foundation_id FROM `user` WHERE user_id=?', [uid]); // role re-read from DB on every request
     if (!me) throw new HttpError(401, 'Account no longer exists');
     const role = roleOf(me.role), isAdmin = role === 'admin';
 
     for (const [m, re, fn] of routes) {
       const hit = re.exec(path);
-      if (m === method && hit) return [200, await fn({ uid, body, params: hit.slice(1), isAdmin, role, foundationId: me.foundation_id ?? null })];
+      if (m === method && hit) return [200, await fn({ uid, body, params: hit.slice(1), isAdmin, role, foundationId: me.foundation_id ?? null, charitySession: session.ch })];
     }
     throw new HttpError(404, 'Route not found');
   } catch (e: any) {

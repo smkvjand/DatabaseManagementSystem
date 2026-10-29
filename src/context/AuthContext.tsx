@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, UserRole } from '../types';
 import { StorageService } from '../services/storage';
-import { AuthGate } from '../components/AuthGate';
+import { PublicEntry } from '../components/PublicEntry';
 
 interface AuthContextType {
   currentUser: User;
@@ -12,6 +12,7 @@ interface AuthContextType {
   logout: () => void;
   isAdmin: boolean;
   isDonor: boolean;
+  isCharityHost: boolean; // signed in through Charity Login with a charity account
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => (status === 'ready' ? StorageService.subscribe(sync) : undefined), [status, sync]);
 
   if (status === 'loading') return <div className="min-h-screen flex items-center justify-center text-[#86868B] text-sm">Connecting to reWear database…</div>;
-  if (status === 'anon') return <AuthGate onDone={enter} />;
+  if (status === 'anon') return <PublicEntry onDone={enter} />;
 
   const currentUser = users.find((u) => u.id === meId) || users[0];
   const logout = () => { StorageService.setToken(null); setStatus('anon'); };
@@ -45,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         switchUser: () => {}, updateCurrentUserRole: () => {},
         updateProfile: (u) => { StorageService.updateUser({ id: currentUser.id, ...u }); sync(); },
         isAdmin: currentUser.role === 'admin', isDonor: true,
+        isCharityHost: currentUser.role === 'charity' && StorageService.isCharitySession,
       }}
     >
       {children}

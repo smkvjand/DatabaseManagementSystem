@@ -2,12 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { StorageService } from '../services/storage';
 
-export const MessagesView: React.FC = () => {
+interface MessagesViewProps { initialWithId?: string; }
+
+export const MessagesView: React.FC<MessagesViewProps> = ({ initialWithId }) => {
   const { currentUser, allUsers } = useAuth();
   const [, tick] = useState(0);
   const [withId, setWithId] = useState('');
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [query, setQuery] = useState('');
+
+  // opened from "Message Owner" / charity "Message" -> jump straight into that conversation
+  useEffect(() => { if (initialWithId) setWithId(initialWithId); }, [initialWithId]);
 
   useEffect(() => StorageService.subscribe(() => tick((t) => t + 1)), []);
   useEffect(() => {
@@ -19,6 +25,12 @@ export const MessagesView: React.FC = () => {
   const msgs = StorageService.getMessages();
   const nameOf = (id: string) => allUsers.find((u) => u.id === id)?.name || 'Unknown';
   const otherOf = (m: { senderId: string; recipientId: string }) => (m.senderId === me ? m.recipientId : m.senderId);
+
+  const needle = query.trim().toLowerCase();
+  const results = needle
+    ? allUsers.filter((u) => u.id !== me && (u.name.toLowerCase().includes(needle) || u.email.toLowerCase().startsWith(needle) || u.studentId.toLowerCase().includes(needle)))
+    : [];
+  const openUser = (id: string) => { setWithId(id); setQuery(''); }; // existing thread is reused: threads are derived per user, never duplicated
 
   const partners = [...new Set([...msgs].reverse().map(otherOf))];
   const unread = (id: string) => msgs.filter((m) => m.senderId === id && m.recipientId === me && !m.readAt).length;
@@ -38,6 +50,24 @@ export const MessagesView: React.FC = () => {
       <h1 className="text-2xl font-semibold tracking-tight text-[#161617] mb-6">Messages</h1>
       <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-4">
         <aside className="rounded-2xl bg-white border border-[#E5E5EA] p-3 space-y-1">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search users by name…"
+            className="w-full mb-2 px-3 py-2 text-[13px] rounded-lg border border-[#E5E5EA] bg-[#F5F5F7] focus:outline-none focus:border-[#161617]"
+          />
+          {needle && (
+            <div className="mb-2 rounded-lg border border-[#E5E5EA] overflow-hidden">
+              {results.map((u) => (
+                <button key={u.id} onClick={() => openUser(u.id)} className="w-full text-left px-3 py-2 text-[13px] flex items-center gap-2 hover:bg-[#F5F5F7] cursor-pointer">
+                  <img src={u.avatarUrl} alt="" className="w-6 h-6 rounded-full" />
+                  <span className="flex-1">{u.name}</span>
+                  <span className="text-[10px] text-[#86868B]">{u.role === 'charity' ? 'Charity' : u.campusDorm}</span>
+                </button>
+              ))}
+              {!results.length && <p className="text-[12px] text-[#86868B] px-3 py-3">No users found</p>}
+            </div>
+          )}
           <select
             value=""
             onChange={(e) => e.target.value && setWithId(e.target.value)}

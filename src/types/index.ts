@@ -142,6 +142,8 @@ export interface CharityFoundation {
   logoUrl: string;
   totalKgReceived: number;
   activeCampaign: string;
+  location?: string;
+  hostUserId?: string; // user id of the charity host account (used for messaging)
 }
 
 export type DonationStatus = 'scheduled' | 'dropped_off' | 'verified_by_council' | 'distributed';

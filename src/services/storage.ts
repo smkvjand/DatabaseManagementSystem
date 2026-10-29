@@ -40,11 +40,22 @@ export class StorageService {
   // ---- session ----
   static get token() { return token; }
   static setToken(t: string | null) { token = t; t ? ls?.setItem(LS('token'), t) : ls?.removeItem(LS('token')); if (!t) cache = null; }
-  static async auth(mode: 'login' | 'register', body: any) {
+  static async auth(mode: 'login' | 'register' | 'register-charity', body: any) {
     const r = await call<{ token: string }>('POST', `/auth/${mode}`, body);
     this.setToken(r.token); await this.load();
   }
   static async load() { cache = await call('GET', '/bootstrap'); }
+  // ---- charity hosting (only usable from a Charity Login session; enforced by the API) ----
+  static get isCharitySession(): boolean { return !!cache?.charitySession; }
+  static async updateCharity(updates: Partial<{ name: string; description: string; category: string; location: string; contactEmail: string; website: string }>) {
+    return wait(() => call('PATCH', '/charity/me', updates));
+  }
+  // public (no sign-in) charity list for the landing page
+  static async fetchPublicCharities(): Promise<CharityFoundation[]> {
+    const res = await fetch('/api/public/charities');
+    if (!res.ok) throw new Error('Could not load charities');
+    return res.json();
+  }
   static get meId(): string { return cache?.me; }
   static subscribe(fn: () => void) { listeners.add(fn); return () => { listeners.delete(fn); }; }
 

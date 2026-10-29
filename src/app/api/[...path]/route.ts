@@ -3,7 +3,6 @@ import { handle } from '@/lib/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30; // Vercel function timeout (seconds)
 
 async function run(req: NextRequest) {
   let body: any = {};

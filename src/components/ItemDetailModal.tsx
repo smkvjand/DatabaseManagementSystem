@@ -8,6 +8,7 @@ interface ItemDetailModalProps {
   onClose: () => void;
   onOpenCheckout: (listing: Listing) => void;
   onOpenExchange: (listing: Listing) => void;
+  onMessageOwner?: (ownerId?: string) => void;
 }
 
 export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
@@ -15,6 +16,7 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
   onClose,
   onOpenCheckout,
   onOpenExchange,
+  onMessageOwner,
 }) => {
   const { currentUser } = useAuth();
   const { isWishlisted, toggleWishlist, reviews, createDonation, dropBoxes, charities } = useData();
@@ -212,6 +214,14 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
                   <div>
                     <div className="font-medium text-[13px] text-[#161617]">{seller.name}</div>
                     <div className="text-[11px] text-[#86868B]">{seller.campusDorm}</div>
+                    {!isOwner && onMessageOwner && listing.sellerId && (
+                      <button
+                        onClick={() => onMessageOwner(listing.sellerId)}
+                        className="mt-1.5 px-3 py-1 rounded-full bg-[#161617] text-white text-[11px] font-medium hover:bg-black cursor-pointer"
+                      >
+                        Message Owner
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">

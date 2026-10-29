@@ -28,6 +28,7 @@ import { Listing } from './types';
 function MainApp() {
   const [currentPath, setCurrentPath] = useState<string>('home');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [messageWithId, setMessageWithId] = useState<string>('');
 
   // Modals state
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
@@ -52,6 +53,14 @@ function MainApp() {
   const handleNavigate = (path: string) => {
     setCurrentPath(path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // open the messaging view with a given user (item owner, charity host, ...)
+  const openMessageWith = (userId?: string) => {
+    if (!userId) { window.alert('This user cannot be messaged.'); return; }
+    setSelectedListing(null);
+    setMessageWithId(userId);
+    handleNavigate('messages');
   };
 
   return (
@@ -108,6 +117,7 @@ function MainApp() {
               setDonationModalState({ isOpen: true, boxId, charityId })
             }
             onOpenImpactReport={() => setIsImpactReportOpen(true)}
+            onMessageCharity={openMessageWith}
           />
         )}
 
@@ -137,7 +147,7 @@ function MainApp() {
 
         {currentPath === 'safety' && <SafetyView onNavigate={handleNavigate} />}
 
-        {currentPath === 'messages' && <MessagesView />}
+        {currentPath === 'messages' && <MessagesView initialWithId={messageWithId} />}
       </main>
 
       {/* Apple-Style Minimal Footer */}
@@ -153,6 +163,7 @@ function MainApp() {
         onClose={() => setSelectedListing(null)}
         onOpenCheckout={(listing) => setCheckoutListing(listing)}
         onOpenExchange={(listing) => setExchangeListing(listing)}
+        onMessageOwner={openMessageWith}
       />
 
       <ListItemModal

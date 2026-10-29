@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
+import { StorageService } from '../services/storage';
 import { DropBoxLocation, CharityFoundation } from '../types';
 
 interface CharityViewProps {
   onOpenDonationModal: (preselectedBoxId?: string, preselectedCharityId?: string) => void;
   onOpenImpactReport: () => void;
+  onMessageCharity?: (hostUserId?: string) => void;
 }
 
 export const CharityView: React.FC<CharityViewProps> = ({
   onOpenDonationModal,
   onOpenImpactReport,
+  onMessageCharity,
 }) => {
+  const { currentUser, isCharityHost } = useAuth();
   const { dropBoxes, charities, impactReport, donations } = useData();
   const [selectedZone, setSelectedZone] = useState<string>('all');
 
@@ -176,6 +181,9 @@ export const CharityView: React.FC<CharityViewProps> = ({
         </div>
       </div>
 
+      {/* Charity host panel: only for accounts signed in via Charity Login */}
+      {isCharityHost && <CharityHostPanel charity={charities.find((c) => c.hostUserId === currentUser.id)} />}
+
       {/* Section: Partner Charity Foundations */}
       <div className="mt-16">
         <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-[#161617] mb-1">
@@ -224,9 +232,44 @@ export const CharityView: React.FC<CharityViewProps> = ({
                   {charity.totalKgReceived} kg
                 </span>
               </div>
+              {onMessageCharity && charity.hostUserId && charity.hostUserId !== currentUser.id && (
+                <button
+                  onClick={() => onMessageCharity(charity.hostUserId)}
+                  className="mt-4 w-full py-2 rounded-xl bg-[#FAF9F6] border border-[#E5E5EA] text-[#161617] hover:bg-[#161617] hover:text-white transition-all text-[12px] font-medium cursor-pointer"
+                >
+                  Message Charity
+                </button>
+              )}
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Edit the public profile of the charity hosted by the signed-in charity account.
+const CharityHostPanel: React.FC<{ charity?: CharityFoundation }> = ({ charity }) => {
+  const [f, setF] = useState({ name: charity?.name || '', description: charity?.description || '', category: charity?.category || '', location: charity?.location || '', contactEmail: charity?.contactEmail || '' });
+  const [msg, setMsg] = useState('');
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
+  const inp = 'w-full border border-[#E5E5EA] rounded-lg px-3 py-2 text-[13px] outline-none focus:border-[#161617]';
+  if (!charity) return null;
+  const save = async () => { setMsg(''); try { await StorageService.updateCharity(f); setMsg('Saved'); } catch { /* alert shown by storage layer */ } };
+  return (
+    <div className="mt-12 p-6 rounded-2xl bg-white border border-[#E5E5EA]">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-800">Charity host</div>
+      <h2 className="text-lg font-semibold text-[#161617] mb-4">Manage your charity profile</h2>
+      <div className="grid gap-3 md:grid-cols-2">
+        <input className={inp} placeholder="Name" value={f.name} onChange={set('name')} />
+        <input className={inp} placeholder="Cause" value={f.category} onChange={set('category')} />
+        <input className={inp} placeholder="Location" value={f.location} onChange={set('location')} />
+        <input className={inp} placeholder="Contact email" value={f.contactEmail} onChange={set('contactEmail')} />
+        <textarea className={`${inp} md:col-span-2`} rows={3} placeholder="Description" value={f.description} onChange={set('description')} />
+      </div>
+      <div className="mt-4 flex items-center gap-3">
+        <button onClick={save} className="px-5 py-2 rounded-full bg-[#161617] text-white text-[12px] font-medium cursor-pointer">Save profile</button>
+        {msg && <span className="text-[12px] text-emerald-800">{msg}</span>}
       </div>
     </div>
   );
