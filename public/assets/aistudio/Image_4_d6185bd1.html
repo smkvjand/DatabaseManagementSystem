@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_standard" name="shell-type"/>
+<title>Browse Clothes — ReWear Campus Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #FAF9F6;
+        color: #1D1D1F;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+    }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "apple-bg": "#FAF9F6",
+            "apple-subtle": "#F5F5F7",
+            "apple-border": "#E5E5EA",
+            "apple-dark": "#161617",
+            "apple-gray": "#86868B",
+            "primary": "#012D1D",
+            "primary-container": "#1B4332",
+            "forest-tint": "#243E30"
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-apple-bg text-[#1D1D1F] min-h-screen flex flex-col justify-between selection:bg-[#1D1D1F] selection:text-white">
+<!-- Minimal Apple-Style Navigation Bar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-[#FAF9F6]/85 backdrop-blur-md border-b border-apple-border transition-all">
+<div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
+<!-- Left: Brand -->
+<div class="flex items-center gap-8">
+<a class="flex items-center gap-2 group tracking-tight text-apple-dark font-medium text-lg hover:opacity-75 transition-opacity" data-path="home" href="#">
+<span class="w-2.5 h-2.5 rounded-full bg-apple-dark inline-block"></span>
+<span class="tracking-[-0.03em] font-semibold">ReWear</span>
+</a>
+<!-- Spaced Nav Items -->
+<nav class="hidden md:flex items-center gap-7 text-[13px] tracking-normal font-normal text-apple-gray"><a class="text-apple-dark font-medium transition-colors relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-apple-dark" data-path="browse-clothes" href="#">Explore</a>
+<a class="hover:text-apple-dark transition-colors" data-path="exchanges" href="#">Exchange</a>
+<a class="hover:text-apple-dark transition-colors" data-path="charity" href="#">Charity</a>
+<a class="hover:text-apple-dark transition-colors flex items-center gap-1.5" data-path="my-wishlist" href="#">
+<span>Wishlist</span>
+<span class="text-[11px] px-1.5 py-0.2 rounded-full bg-apple-subtle text-apple-dark font-medium border border-apple-border">3</span>
+</a></nav>
+</div>
+<!-- Right: Search & Understated Actions -->
+<div class="flex items-center gap-4">
+<!-- Quiet Search Pill -->
+<div class="relative hidden sm:flex items-center">
+<span class="material-symbols-outlined text-[17px] text-apple-gray absolute left-3 pointer-events-none">search</span>
+<input class="w-52 md:w-64 pl-8 pr-3 py-1.5 text-[12px] bg-apple-subtle/80 hover:bg-apple-subtle border border-apple-border/70 rounded-full text-apple-dark placeholder:text-apple-gray/70 focus:outline-none focus:border-apple-dark focus:bg-white transition-all" placeholder="Search campus dorms, brands..." type="text"/>
+</div>
+<!-- Clean Dark Pill Button -->
+<a class="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-apple-dark text-white text-[12px] font-medium tracking-tight hover:bg-black/85 transition-all active:scale-[0.98]" data-path="list-item" href="#">
+<span>List an item</span>
+</a>
+<!-- Clean User Avatar -->
+<button class="flex items-center focus:outline-none ml-1 group">
+<img alt="User profile" class="w-7 h-7 rounded-full object-cover ring-1 ring-apple-border group-hover:ring-apple-dark transition-all" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAiSqF4j3OJxLNlsSzMbu5OnXe688VYT59pjRzD4BHdlj2CWrfppgetkGdXCfwVUB3Lv9nhMTFICvZBVFTlo0V4DJJZ9U_kKxrAEfmHt4R8xFnIR-T8nevY-4pNdCa7Rr1J16o9rnTj7QUQ5ttnVaq2D3m1B2HChZ1Z5JfZ1HOj-to7LHibKtdjEdHedm-StW28kZnCCmgTWtUi1Kdarw72y7fzTfh1haeLMCTFAMBjKWPYsO7ZaBd"/>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="w-full pt-16 flex-1"><div class="max-w-6xl mx-auto px-6 pt-10 pb-20">
+<!-- Catalog Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-apple-border/70">
+<div>
+<div class="inline-flex items-center gap-2 mb-2 text-[11px] font-semibold tracking-wider uppercase text-apple-gray">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+<span>Campus Circular Catalog</span>
+</div>
+<h1 class="text-3xl sm:text-4xl font-semibold tracking-tight text-apple-dark">Campus Collection</h1>
+<p class="mt-1.5 text-[14px] text-apple-gray font-normal">
+184 pre-loved pieces inspected and ready for campus pickup.
+</p>
+</div>
+<div class="flex items-center gap-3 self-start md:self-end">
+<div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white border border-apple-border/80 text-[12px] text-apple-dark shadow-xs">
+<span class="material-symbols-outlined text-[16px] text-apple-gray">swap_vert</span>
+<span class="font-medium">Sort by:</span>
+<span class="text-apple-gray">Newest arrivals</span>
+</div>
+</div>
+</div>
+<!-- Filter Pills & Category Bar -->
+<div class="py-5 flex flex-col gap-4 border-b border-apple-border/60">
+<!-- Primary Category Pills -->
+<div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 text-[12px]">
+<button class="px-3.5 py-1.5 rounded-full bg-apple-dark text-white font-medium shrink-0 transition-all">All (184)</button>
+<button class="px-3.5 py-1.5 rounded-full bg-white border border-apple-border hover:bg-apple-subtle text-apple-dark shrink-0 transition-all">Outerwear (42)</button>
+<button class="px-3.5 py-1.5 rounded-full bg-white border border-apple-border hover:bg-apple-subtle text-apple-dark shrink-0 transition-all">Knitwear (38)</button>
+<button class="px-3.5 py-1.5 rounded-full bg-white border border-apple-border hover:bg-apple-subtle text-apple-dark shrink-0 transition-all">Denim (29)</button>
+<button class="px-3.5 py-1.5 rounded-full bg-white border border-apple-border hover:bg-apple-subtle text-apple-dark shrink-0 transition-all">Tops (51)</button>
+<button class="px-3.5 py-1.5 rounded-full bg-white border border-apple-border hover:bg-apple-subtle text-apple-dark shrink-0 transition-all">Dresses (24)</button>
+</div>
+<!-- Secondary Filter Tags (Size, Type, Campus Hub, Price) -->
+<div class="flex flex-wrap items-center justify-between gap-3 text-[12px]">
+<div class="flex flex-wrap items-center gap-2">
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-apple-subtle/80 hover:bg-apple-subtle border border-apple-border/70 text-apple-dark transition-all">
+<span>Size: Any</span>
+<span class="material-symbols-outlined text-[15px] text-apple-gray">expand_more</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-apple-subtle/80 hover:bg-apple-subtle border border-apple-border/70 text-apple-dark transition-all">
+<span>Type (Buy, Swap, Donate)</span>
+<span class="material-symbols-outlined text-[15px] text-apple-gray">expand_more</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-apple-subtle/80 hover:bg-apple-subtle border border-apple-border/70 text-apple-dark transition-all">
+<span>Campus Hub</span>
+<span class="material-symbols-outlined text-[15px] text-apple-gray">expand_more</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-apple-subtle/80 hover:bg-apple-subtle border border-apple-border/70 text-apple-dark transition-all">
+<span>Price Range</span>
+<span class="material-symbols-outlined text-[15px] text-apple-gray">expand_more</span>
+</button>
+</div>
+<span class="text-[12px] text-apple-gray font-normal hidden sm:inline-block">Showing 8 of 184 listings</span>
+</div>
+</div>
+<!-- 8 Curated Student Listings Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7 pt-8">
+<!-- Card 1 -->
+<article class="group flex flex-col">
+<div class="relative aspect-[4/5] w-full rounded-xl overflow-hidden bg-apple-subtle border border-apple-border/60 transition-all">
+<img alt="Levi's 501 Original Fit Jeans" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6LWc-9CSgBIhsDsu6aBeM9fibvsQDYUUmqZr58MPZQ7H6BwIpRStA8Pktc3j7I_fl_afzP7Z0Y-htIdiV6ZZwz8savgYh7X4X4561KmOPakTwAARdmsgD9p1AYHKJfdFpn-zFvgtyZ4N4q6aa1OL8L52MBu-IleT5WSergJVd3T7CfsuokFL8yp31d-hd1XzHbU_EcMAXDGsGriB2yNdQbpbndumPjxm4-eifSfkn-zykpSu6XyM7"/>
+<button aria-label="Save to Wishlist" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-apple-gray hover:text-apple-dark transition-colors shadow-xs" onclick="this.classList.toggle('text-red-500');">
+<span class="material-symbols-outlined text-[17px]">favorite</span>
+</button>
+</div>
+<div class="mt-3.5 flex flex-col">
+<div class="flex items-center justify-between text-[11px] text-apple-gray uppercase tracking-wider font-medium">
+<span>Levi's Vintage</span>
+<span>Size 30/32</span>
+</div>
+<h4 class="text-[14px] font-medium text-apple-dark tracking-tight mt-0.5 truncate">501 Original Fit Jeans</h4>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-apple-border/40">
+<span class="text-[14px] font-semibold text-apple-dark">$24</span>
+<span class="text-[12px] text-apple-gray">North Hall</span>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="group flex flex-col">
+<div class="relative aspect-[4/5] w-full rounded-xl overflow-hidden bg-apple-subtle border border-apple-border/60 transition-all">
+<img alt="Patagonia Synchilla Snap-T Fleece" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeRBX5y_V_47L2GsQEBNM4V9BSs4p6aUbGxLEZqks576Rx3b8ivAZ-2fC8cfGwL6QvX9ZMrVqOAw5CEwWFbWquCVclO82PHsKwPnT7oFO3bnhPHwVm4sHaj2UdQB7bvxk9bvL8BW4BD8Uu_LBf_6k7jwSz_WJW0CRILoQNQc1AI7tGDvQrWv2JwpO8JQSxO9j4QiB5KHbXkzwT9htp7IbqajO6MsFGYn-PrNdMIXGkhKuM-wl8hknv"/>
+<button aria-label="Save to Wishlist" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-apple-gray hover:text-apple-dark transition-colors shadow-xs" onclick="this.classList.toggle('text-red-500');">
+<span class="material-symbols-outlined text-[17px]">favorite</span>
+</button>
+</div>
+<div class="mt-3.5 flex flex-col">
+<div class="flex items-center justify-between text-[11px] text-apple-gray uppercase tracking-wider font-medium">
+<span>Patagonia</span>
+<span>Size M</span>
+</div>
+<h4 class="text-[14px] font-medium text-apple-dark tracking-tight mt-0.5 truncate">Synchilla Snap-T Fleece</h4>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-apple-border/40">
+<span class="text-[14px] font-semibold text-apple-dark">Swap or $35</span>
+<span class="text-[12px] text-apple-gray">Student Union</span>
+</div>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="group flex flex-col">
+<div class="relative aspect-[4/5] w-full rounded-xl overflow-hidden bg-apple-subtle border border-apple-border/60 transition-all">
+<img alt="Everlane Chunky Wool Crewneck" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAz5YSq5NecD24QACVnPBbebh7gQ6qLoo4CINO_Uzm9960a0A6gDaWUDvKm-rCt4G_yQ3e3rEc96EeFxKL16RbqHAdzriCfBdxwGBt5DE9pMx2vIb5FzPWeggJNj0kC_YZ_HYGEhpxn2cuFrgijoB9tiwbW-dhsgk2Oc-iTeCnd1zknJpguNjeWSHPC-daVYt19QiTteCmAIxVUtPZcoflZCK6giigmfSkxrg6dmy6wSL_Eqr-Z4-Ao"/>
+<button aria-label="Save to Wishlist" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-apple-gray hover:text-apple-dark transition-colors shadow-xs" onclick="this.classList.toggle('text-red-500');">
+<span class="material-symbols-outlined text-[17px]">favorite</span>
+</button>
+</div>
+<div class="mt-3.5 flex flex-col">
+<div class="flex items-center justify-between text-[11px] text-apple-gray uppercase tracking-wider font-medium">
+<span>Everlane</span>
+<span>Size S</span>
+</div>
+<h4 class="text-[14px] font-medium text-apple-dark tracking-tight mt-0.5 truncate">Chunky Wool Crewneck</h4>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-apple-border/40">
+<span class="text-[14px] font-semibold text-apple-dark">Exchange Only</span>
+<span class="text-[12px] text-apple-gray">East Dorms</span>
+</div>
+</div>
+</article>
+<!-- Card 4 -->
+<article class="group flex flex-col">
+<div class="relative aspect-[4/5] w-full rounded-xl overflow-hidden bg-apple-subtle border border-apple-border/60 transition-all">
+<img alt="Carhartt Duck Canvas Overshirt" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRXuRzD65I3op0H9v4akNpMD-pYCI8h_zH9xifpEGv8MKAEmk7k8XFkDM6QnHsQers000Wz28ovX-eC8Q7YQzLmVeL6Wq4Ux4BGoYmgVN2G3bG1poZkdhJq5bt1kzPFD5kE5PjGXnmxuuiV5teSWksjUB2P3fEETai9Jr-BKq_gbWT24xetP1Kiqjnk2QXSymNzgUKixj6SiwosDVhAiIJRAyLUu8A0v3uxWvmWJaDJn8jr_4qClgA"/>
+<button aria-label="Save to Wishlist" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-apple-gray hover:text-apple-dark transition-colors shadow-xs" onclick="this.classList.toggle('text-red-500');">
+<span class="material-symbols-outlined text-[17px]">favorite</span>
+</button>
+</div>
+<div class="mt-3.5 flex flex-col">
+<div class="flex items-center justify-between text-[11px] text-apple-gray uppercase tracking-wider font-medium">
+<span>Carhartt</span>
+<span>Size L</span>
+</div>
+<h4 class="text-[14px] font-medium text-apple-dark tracking-tight mt-0.5 truncate">Duck Canvas Overshirt</h4>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-apple-border/40">
+<span class="text-[14px] font-semibold text-apple-dark">$28</span>
+<span class="text-[12px] text-apple-gray">South Campus</span>
+</div>
+</div>
+</article>
+<!-- Card 5 -->
+<article class="group flex flex-col">
+<div class="relative aspect-[4/5] w-full rounded-xl overflow-hidden bg-apple-subtle border border-apple-border/60 transition-all">
+<img alt="Stüssy Corduroy Overshirt" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRXuRzD65I3op0H9v4akNpMD-pYCI8h_zH9xifpEGv8MKAEmk7k8XFkDM6QnHsQers000Wz28ovX-eC8Q7YQzLmVeL6Wq4Ux4BGoYmgVN2G3bG1poZkdhJq5bt1kzPFD5kE5PjGXnmxuuiV5teSWksjUB2P3fEETai9Jr-BKq_gbWT24xetP1Kiqjnk2QXSymNzgUKixj6SiwosDVhAiIJRAyLUu8A0v3uxWvmWJaDJn8jr_4qClgA"/>
+<div class="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-emerald-600/90 backdrop-blur-md text-white text-[10px] font-medium tracking-wide uppercase shadow-xs">
+Charity
+</div>
+<button aria-label="Save to Wishlist" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-apple-gray hover:text-apple-dark transition-colors shadow-xs" onclick="this.classList.toggle('text-red-500');">
+<span class="material-symbols-outlined text-[17px]">favorite</span>
+</button>
+</div>
+<div class="mt-3.5 flex flex-col">
+<div class="flex items-center justify-between text-[11px] text-apple-gray uppercase tracking-wider font-medium">
+<span>Stüssy</span>
+<span>Size M</span>
+</div>
+<h4 class="text-[14px] font-medium text-apple-dark tracking-tight mt-0.5 truncate">Corduroy Overshirt</h4>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-apple-border/40">
+<span class="text-[13px] font-semibold text-emerald-600">Free Donation</span>
+<span class="text-[12px] text-apple-gray">Drop Box #3</span>
+</div>
+</div>
+</article>
+<!-- Card 6 -->
+<article class="group flex flex-col">
+<div class="relative aspect-[4/5] w-full rounded-xl overflow-hidden bg-apple-subtle border border-apple-border/60 transition-all">
+<img alt="&amp; Other Stories Linen Midi Dress" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAz5YSq5NecD24QACVnPBbebh7gQ6qLoo4CINO_Uzm9960a0A6gDaWUDvKm-rCt4G_yQ3e3rEc96EeFxKL16RbqHAdzriCfBdxwGBt5DE9pMx2vIb5FzPWeggJNj0kC_YZ_HYGEhpxn2cuFrgijoB9tiwbW-dhsgk2Oc-iTeCnd1zknJpguNjeWSHPC-daVYt19QiTteCmAIxVUtPZcoflZCK6giigmfSkxrg6dmy6wSL_Eqr-Z4-Ao"/>
+<button aria-label="Save to Wishlist" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-apple-gray hover:text-apple-dark transition-colors shadow-xs" onclick="this.classList.toggle('text-red-500');">
+<span class="material-symbols-outlined text-[17px]">favorite</span>
+</button>
+</div>
+<div class="mt-3.5 flex flex-col">
+<div class="flex items-center justify-between text-[11px] text-apple-gray uppercase tracking-wider font-medium">
+<span>&amp; Other Stories</span>
+<span>Size XS</span>
+</div>
+<h4 class="text-[14px] font-medium text-apple-dark tracking-tight mt-0.5 truncate">Linen Midi Dress</h4>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-apple-border/40">
+<span class="text-[14px] font-semibold text-apple-dark">$19</span>
+<span class="text-[12px] text-apple-gray">Engineering Quad</span>
+</div>
+</div>
+</article>
+<!-- Card 7 -->
+<article class="group flex flex-col">
+<div class="relative aspect-[4/5] w-full rounded-xl overflow-hidden bg-apple-subtle border border-apple-border/60 transition-all">
+<img alt="Barbour Waxed Utility Jacket" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRXuRzD65I3op0H9v4akNpMD-pYCI8h_zH9xifpEGv8MKAEmk7k8XFkDM6QnHsQers000Wz28ovX-eC8Q7YQzLmVeL6Wq4Ux4BGoYmgVN2G3bG1poZkdhJq5bt1kzPFD5kE5PjGXnmxuuiV5teSWksjUB2P3fEETai9Jr-BKq_gbWT24xetP1Kiqjnk2QXSymNzgUKixj6SiwosDVhAiIJRAyLUu8A0v3uxWvmWJaDJn8jr_4qClgA"/>
+<button aria-label="Save to Wishlist" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-apple-gray hover:text-apple-dark transition-colors shadow-xs" onclick="this.classList.toggle('text-red-500');">
+<span class="material-symbols-outlined text-[17px]">favorite</span>
+</button>
+</div>
+<div class="mt-3.5 flex flex-col">
+<div class="flex items-center justify-between text-[11px] text-apple-gray uppercase tracking-wider font-medium">
+<span>Barbour</span>
+<span>Size M</span>
+</div>
+<h4 class="text-[14px] font-medium text-apple-dark tracking-tight mt-0.5 truncate">Waxed Utility Jacket</h4>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-apple-border/40">
+<span class="text-[14px] font-semibold text-apple-dark">$52</span>
+<span class="text-[12px] text-apple-gray">West Quad</span>
+</div>
+</div>
+</article>
+<!-- Card 8 -->
+<article class="group flex flex-col">
+<div class="relative aspect-[4/5] w-full rounded-xl overflow-hidden bg-apple-subtle border border-apple-border/60 transition-all">
+<img alt="A.P.C. Raw Denim Petit Standard" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6LWc-9CSgBIhsDsu6aBeM9fibvsQDYUUmqZr58MPZQ7H6BwIpRStA8Pktc3j7I_fl_afzP7Z0Y-htIdiV6ZZwz8savgYh7X4X4561KmOPakTwAARdmsgD9p1AYHKJfdFpn-zFvgtyZ4N4q6aa1OL8L52MBu-IleT5WSergJVd3T7CfsuokFL8yp31d-hd1XzHbU_EcMAXDGsGriB2yNdQbpbndumPjxm4-eifSfkn-zykpSu6XyM7"/>
+<button aria-label="Save to Wishlist" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-apple-gray hover:text-apple-dark transition-colors shadow-xs" onclick="this.classList.toggle('text-red-500');">
+<span class="material-symbols-outlined text-[17px]">favorite</span>
+</button>
+</div>
+<div class="mt-3.5 flex flex-col">
+<div class="flex items-center justify-between text-[11px] text-apple-gray uppercase tracking-wider font-medium">
+<span>A.P.C.</span>
+<span>Size 31</span>
+</div>
+<h4 class="text-[14px] font-medium text-apple-dark tracking-tight mt-0.5 truncate">Raw Denim Petit Standard</h4>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-apple-border/40">
+<span class="text-[14px] font-semibold text-apple-dark">$38</span>
+<span class="text-[12px] text-apple-gray">Central Library</span>
+</div>
+</div>
+</article>
+</div>
+<!-- Quiet Apple Pagination -->
+<div class="mt-16 flex flex-col items-center justify-center gap-3 text-center">
+<span class="text-[13px] text-apple-gray font-normal">Showing 8 of 184 items</span>
+<button class="px-6 py-2.5 rounded-full bg-apple-dark text-white text-[13px] font-medium tracking-tight hover:bg-black/90 transition-all shadow-xs active:scale-[0.98]">
+Load more pieces
+</button>
+</div>
+</div></main>
+<!-- Apple-Style Minimal Footer -->
+<footer class="w-full border-t border-apple-border bg-apple-bg py-12 text-[12px] text-apple-gray">
+<div class="max-w-6xl mx-auto px-6">
+<!-- Top Row: Directory Links -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-8 pb-10 border-b border-apple-border/60">
+<div>
+<h5 class="text-apple-dark font-medium mb-3 text-[13px]">Explore</h5>
+<ul class="space-y-2">
+<li><a class="hover:text-apple-dark transition-colors" data-path="browse-clothes" href="#">All Clothes</a></li>
+<li><a class="hover:text-apple-dark transition-colors" data-path="browse-clothes" href="#">Outerwear</a></li>
+<li><a class="hover:text-apple-dark transition-colors" data-path="browse-clothes" href="#">Knitwear</a></li>
+<li><a class="hover:text-apple-dark transition-colors" data-path="browse-clothes" href="#">Denim</a></li>
+</ul>
+</div>
+<div>
+<h5 class="text-apple-dark font-medium mb-3 text-[13px]">Programs</h5>
+<ul class="space-y-2">
+<li><a class="hover:text-apple-dark transition-colors" data-path="exchanges" href="#">Dorm Swaps</a></li>
+<li><a class="hover:text-apple-dark transition-colors" data-path="charity" href="#">Charity Bins</a></li>
+<li><a class="hover:text-apple-dark transition-colors" data-path="exchange-guidelines" href="#">Meetup Safety</a></li>
+</ul>
+</div>
+<div>
+<h5 class="text-apple-dark font-medium mb-3 text-[13px]">Student Council</h5>
+<ul class="space-y-2">
+<li><a class="hover:text-apple-dark transition-colors" data-path="sustainability-report" href="#">Impact Reports</a></li>
+<li><a class="hover:text-apple-dark transition-colors" data-path="team" href="#">Team &amp; Dorm Leads</a></li>
+<li><a class="hover:text-apple-dark transition-colors" data-path="campus-partners" href="#">Partner Hubs</a></li>
+</ul>
+</div>
+<div>
+<h5 class="text-apple-dark font-medium mb-3 text-[13px]">Account</h5>
+<ul class="space-y-2">
+<li><a class="hover:text-apple-dark transition-colors" data-path="my-wishlist" href="#">Wishlist</a></li>
+<li><a class="hover:text-apple-dark transition-colors" data-path="list-item" href="#">List an Item</a></li>
+<li><a class="hover:text-apple-dark transition-colors" data-path="contact" href="#">Student Support</a></li>
+</ul>
+</div>
+</div>
+<!-- Bottom Row: Copyright & Legal -->
+<div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-apple-gray">
+<p>© 2025 ReWear Initiative. Less, but better fashion for campus life.</p>
+<div class="flex items-center gap-6">
+<a class="hover:text-apple-dark transition-colors" href="#">Privacy</a>
+<a class="hover:text-apple-dark transition-colors" href="#">Terms</a>
+<a class="hover:text-apple-dark transition-colors" href="#">Campus Guidelines</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,208 @@
+---
+name: ReWear
+colors:
+  surface: '#fcf8fb'
+  surface-dim: '#dcd9dc'
+  surface-bright: '#fcf8fb'
+  surface-container-lowest: '#ffffff'
+  surface-container-low: '#f6f3f5'
+  surface-container: '#f0edef'
+  surface-container-high: '#eae7ea'
+  surface-container-highest: '#e4e2e4'
+  on-surface: '#1b1b1d'
+  on-surface-variant: '#414844'
+  inverse-surface: '#303032'
+  inverse-on-surface: '#f3f0f2'
+  outline: '#717973'
+  outline-variant: '#c1c8c2'
+  surface-tint: '#3f6653'
+  primary: '#012d1d'
+  on-primary: '#ffffff'
+  primary-container: '#1b4332'
+  on-primary-container: '#86af99'
+  inverse-primary: '#a5d0b9'
+  secondary: '#316951'
+  on-secondary: '#ffffff'
+  secondary-container: '#b2ecce'
+  on-secondary-container: '#366d55'
+  tertiary: '#401b1b'
+  on-tertiary: '#ffffff'
+  tertiary-container: '#5a302f'
+  on-tertiary-container: '#d29895'
+  error: '#ba1a1a'
+  on-error: '#ffffff'
+  error-container: '#ffdad6'
+  on-error-container: '#93000a'
+  primary-fixed: '#c1ecd4'
+  primary-fixed-dim: '#a5d0b9'
+  on-primary-fixed: '#002114'
+  on-primary-fixed-variant: '#274e3d'
+  secondary-fixed: '#b5efd1'
+  secondary-fixed-dim: '#99d3b6'
+  on-secondary-fixed: '#002114'
+  on-secondary-fixed-variant: '#16503a'
+  tertiary-fixed: '#ffdad8'
+  tertiary-fixed-dim: '#f5b7b4'
+  on-tertiary-fixed: '#331111'
+  on-tertiary-fixed-variant: '#673a39'
+  background: '#fcf8fb'
+  on-background: '#1b1b1d'
+  surface-variant: '#e4e2e4'
+typography:
+  display:
+    fontFamily: Inter
+    fontSize: 56px
+    fontWeight: '600'
+    lineHeight: 60px
+    letterSpacing: -0.035em
+  display-mobile:
+    fontFamily: Inter
+    fontSize: 38px
+    fontWeight: '600'
+    lineHeight: 42px
+    letterSpacing: -0.03em
+  headline-lg:
+    fontFamily: Inter
+    fontSize: 40px
+    fontWeight: '600'
+    lineHeight: 46px
+    letterSpacing: -0.03em
+  headline-lg-mobile:
+    fontFamily: Inter
+    fontSize: 30px
+    fontWeight: '600'
+    lineHeight: 36px
+    letterSpacing: -0.025em
+  headline-md:
+    fontFamily: Inter
+    fontSize: 26px
+    fontWeight: '600'
+    lineHeight: 32px
+    letterSpacing: -0.02em
+  headline-sm:
+    fontFamily: Inter
+    fontSize: 20px
+    fontWeight: '500'
+    lineHeight: 26px
+    letterSpacing: -0.015em
+  body-lg:
+    fontFamily: Inter
+    fontSize: 17px
+    fontWeight: '400'
+    lineHeight: 24px
+    letterSpacing: -0.012em
+  body-md:
+    fontFamily: Inter
+    fontSize: 15px
+    fontWeight: '400'
+    lineHeight: 21px
+    letterSpacing: -0.008em
+  body-sm:
+    fontFamily: Inter
+    fontSize: 13px
+    fontWeight: '400'
+    lineHeight: 18px
+    letterSpacing: -0.004em
+  label-md:
+    fontFamily: Inter
+    fontSize: 13px
+    fontWeight: '500'
+    lineHeight: 16px
+    letterSpacing: 0.01em
+  label-sm:
+    fontFamily: Inter
+    fontSize: 11px
+    fontWeight: '600'
+    lineHeight: 14px
+    letterSpacing: 0.04em
+rounded:
+  sm: 0.125rem
+  DEFAULT: 0.25rem
+  md: 0.375rem
+  lg: 0.5rem
+  xl: 0.75rem
+  full: 9999px
+spacing:
+  gutter: 1.5rem
+  gutter-mobile: 1rem
+  margin: 3rem
+  margin-tablet: 2rem
+  margin-mobile: 1.25rem
+  space-xs: 0.25rem
+  space-sm: 0.5rem
+  space-md: 1rem
+  space-lg: 1.5rem
+  space-xl: 2.5rem
+---
+
+## Brand & Style
+
+The design system embodies "Less, but better"—a philosophy grounded in editorial clarity, understated luxury, and environmental intentionality. Designed for conscious consumers and circular fashion patrons, the interface evokes calm focus, uncompromising craftsmanship, and tactile quietness. The aesthetic draws heavily from modern industrial minimalism: expansive canvas breathing room, surgical typographic discipline, and zero gratuitous ornamentation. Interactions feel fluid, immediate, and feather-light. Visual tension is created not by loud graphics, but through deliberate spatial cadence, crisp micro-borders, and high-fidelity typography.
+
+## Colors
+
+The palette is rooted in timeless, architectural neutrals paired with an organic, deep forest tone. 
+
+- **Canvas & Surfaces:** The primary ground is `#FBFBFD` with subtle transitions to `#FAF9F6` for elevated editorial modules, delivering warmth without chromatic distraction.
+- **Typography & Key Structural Elements:** Deep soot (`#1D1D1F`) provides uncompromising legibility while remaining softer than harsh pure black. Subdued body and secondary labels utilize `#6E6E73` and `#86868B`.
+- **Forest Accents:** `#1B4332` serves as the primary accent anchor—used judiciously for high-value validation badges, primary sustainable actions, and editorial tags. `#245C45` provides accessible hover and selected states.
+- **Dividers & Architectural Lines:** `#E5E5EA` and `#F2F2F7` deliver hairline structure, maintaining layout rigor without visual clutter.
+
+## Typography
+
+The type system relies exclusively on `Inter`, optimized for extreme optical precision across devices.
+
+- **Display & Headlines:** Set with tight tracking (`-0.035em` down to `-0.02em`) and compact line heights to create a unified editorial posture reminiscent of modern print monographs.
+- **Body:** Standardized around Apple-standard scales (15px and 17px) with slight negative tracking to balance legibility and density.
+- **Labels & Micro-copy:** Uppercase or small tracking offsets (`+0.01em` to `+0.04em`) reserved strictly for circular metadata, material provenance labels, and functional indices.
+
+## Layout & Spacing
+
+A 12-column fluid grid defines layout rhythm, constrained within a maximum width of 1440px to ensure photographic narratives never lose compositional framing.
+
+- **Desktop (>= 1024px):** 12 columns, 1.5rem gutter, 3rem canvas edge margin. Generous vertical section stacking using 4rem to 6rem vertical rhythm.
+- **Tablet (768px – 1023px):** 8 columns, 1.25rem gutter, 2rem canvas edge margin.
+- **Mobile (< 768px):** 4 columns, 1rem gutter, 1.25rem canvas edge margin. Multi-column editorial modules collapse into unified single-column vertical flows or horizontal swipe carousels with trailing peek hints.
+- **Spacing Principle:** Spacing follows an 8pt modular discipline with 4pt half-steps for micro-alignments (`space-xs`). Whitespace is an active framing device, purposefully separating product catalog entries to preserve an archival gallery atmosphere.
+
+## Elevation & Depth
+
+Visual hierarchy rejects heavy, artificial drop shadows in favor of surface tonal contrast and hair-thin boundaries.
+
+- **Planar Hierarchy:** The canvas sits at `#FBFBFD`. Floating or overlay surfaces (such as navigation bars, contextual drawers, and modal sheets) adopt translucent backgrounds (`rgba(251, 251, 253, 0.85)`) coupled with a heavy Gaussian backdrop blur (`backdrop-filter: blur(20px)`).
+- **Outlines over Shadows:** Cards, containers, and table cells stay flat on the ground plane, separated solely by 1px solid `#E5E5EA` structural borders.
+- **Micro-Shadows:** Elevated interactive overlays (such as dropdown flyouts or modal cards) employ an imperceptible, ambient shadow: `0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)`.
+
+## Shapes
+
+The geometry uses a refined micro-radius framework. A calibrated default corner radius of 6px to 8px establishes an architectural, precise look.
+
+- **Containers, Cards, & Inputs:** Set with a consistent 6px–8px radius (`roundedness: 1`), conveying clean engineering rather than playful or toy-like softness.
+- **Interactive Badges & Pills:** Full-radius pill shapes (`9999px`) are intentionally reserved for state indicators, material attribute tags (e.g., "Organic Wool", "Pre-Owned"), and compact utility buttons.
+
+## Components
+
+### Buttons
+- **Primary:** Dark filled `#1D1D1F` with pure `#FFFFFF` typography. 40px default height, 8px micro-radius, or full pill (`rounded-full`). Hover state shifts to `#2C2C2E` with seamless 150ms ease.
+- **Secondary / Stroked:** Transparent background with a 1px border of `#E5E5EA`, text `#1D1D1F`. Hover state shifts surface to `#F2F2F7`.
+- **Accent (Circular Impact):** Deep forest green `#1B4332` fill, text `#FFFFFF`, applied exclusively to key conversion milestones (e.g., "Secure via Trade-In").
+
+### Product Cards
+- Clean editorial frames. Zero drop shadows. Framed by a 1px `#E5E5EA` hairline or borderless against alternating `#FAF9F6` ground.
+- Product imagery displays in an intentional 3:4 or 4:5 vertical aspect ratio with minimal internal padding, allowing photography to remain primary.
+- Footers feature high-contrast metadata: designer, garment condition score, circular trade value, and price formatted in `body-sm` and `label-sm`.
+
+### Chips & Attributes
+- Micro-pill geometry (`rounded-full`), height 24px–28px.
+- Background in subtle stone `#F2F2F7` with text in `#1D1D1F`. Selected states take on `#1B4332` fill with crisp white text.
+
+### Inputs & Selectors
+- Height 44px, 8px radius, border 1px solid `#E5E5EA`, background `#FFFFFF`.
+- Placeholder text in `#86868B`. Focus state transitions outline to 1px solid `#1D1D1F` without heavy focus halos.
+
+### Checkboxes & Selection Controls
+- Checkbox: 18x18px box with 4px micro-corner radius. Default unselected: 1.5px stroke `#E5E5EA`. Checked state fills `#1B4332` with a precise white check glyph.
+- Radio: 18x18px circle, checked state featuring an inner 6px solid `#1B4332` dot.
+
+### Verification & Circularity Badges
+- Proprietary authentication markers pairing a 12px circular pip in `#1B4332` with monospace garment provenance metadata, emphasizing transparency and verification.

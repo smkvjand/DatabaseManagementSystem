@@ -1,0 +1,31 @@
+{
+  "name": "rewear",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "seed": "node scripts/seed.mjs"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.11.0",
+    "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
+    "mysql2": "^3.11.3",
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "typescript": "^5.6.0"
+  }
+}

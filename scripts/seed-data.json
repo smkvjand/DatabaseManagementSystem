@@ -1,0 +1,392 @@
+{
+ "locations": [
+  {
+   "location_id": 1,
+   "city": "North Hall 304",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 2,
+   "city": "East Dorms 112",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 3,
+   "city": "Student Sustainability Le",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 4,
+   "city": "West Quad 208",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 5,
+   "city": "North Hall",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 6,
+   "city": "Student Union",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 7,
+   "city": "East Dorms",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 8,
+   "city": "South Campus",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 9,
+   "city": "Drop Box #3",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 10,
+   "city": "Engineering Quad",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 11,
+   "city": "West Quad",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 12,
+   "city": "Central Library",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  },
+  {
+   "location_id": 13,
+   "city": "North Quad Hall",
+   "state": "Campus",
+   "postal_code": "00000",
+   "country": "USA"
+  }
+ ],
+ "categories": [
+  {
+   "category_id": 1,
+   "category_name": "Outerwear"
+  },
+  {
+   "category_id": 2,
+   "category_name": "Knitwear"
+  },
+  {
+   "category_id": 3,
+   "category_name": "Denim"
+  },
+  {
+   "category_id": 4,
+   "category_name": "Tops"
+  },
+  {
+   "category_id": 5,
+   "category_name": "Dresses"
+  }
+ ],
+ "users": [
+  {
+   "user_id": 1,
+   "location_id": 1,
+   "name": "Alex Morgan",
+   "email": "alex@campus.edu",
+   "created_at": "2025-08-15 09:00:00",
+   "admin": false
+  },
+  {
+   "user_id": 2,
+   "location_id": 2,
+   "name": "Maya Lin",
+   "email": "maya@campus.edu",
+   "created_at": "2025-07-10 14:30:00",
+   "admin": false
+  },
+  {
+   "user_id": 3,
+   "location_id": 3,
+   "name": "Jordan Chen",
+   "email": "jordan@campus.edu",
+   "created_at": "2025-01-10 10:00:00",
+   "admin": true
+  },
+  {
+   "user_id": 4,
+   "location_id": 4,
+   "name": "Samira Patel",
+   "email": "samira@campus.edu",
+   "created_at": "2025-09-02 11:20:00",
+   "admin": false
+  }
+ ],
+ "items": [
+  {
+   "item_id": 1,
+   "owner_id": 4,
+   "category_id": 3,
+   "location_id": 5,
+   "title": "501 Straight Leg Denim",
+   "size": "Size 30/32",
+   "condition": "Gently Used",
+   "status": "available",
+   "listed_at": "2025-10-18 10:00:00",
+   "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuB6LWc-9CSgBIhsDsu6aBeM9fibvsQDYUUmqZr58MPZQ7H6BwIpRStA8Pktc3j7I_fl_afzP7Z0Y-htIdiV6ZZwz8savgYh7X4X4561KmOPakTwAARdmsgD9p1AYHKJfdFpn-zFvgtyZ4N4q6aa1OL8L52MBu-IleT5WSergJVd3T7CfsuokFL8yp31d-hd1XzHbU_EcMAXDGsGriB2yNdQbpbndumPjxm4-eifSfkn-zykpSu6XyM7"
+  },
+  {
+   "item_id": 2,
+   "owner_id": 2,
+   "category_id": 1,
+   "location_id": 6,
+   "title": "Synchilla Snap-T Fleece Pullover",
+   "size": "Size M",
+   "condition": "Like New",
+   "status": "available",
+   "listed_at": "2025-10-19 14:15:00",
+   "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAeRBX5y_V_47L2GsQEBNM4V9BSs4p6aUbGxLEZqks576Rx3b8ivAZ-2fC8cfGwL6QvX9ZMrVqOAw5CEwWFbWquCVclO82PHsKwPnT7oFO3bnhPHwVm4sHaj2UdQB7bvxk9bvL8BW4BD8Uu_LBf_6k7jwSz_WJW0CRILoQNQc1AI7tGDvQrWv2JwpO8JQSxO9j4QiB5KHbXkzwT9htp7IbqajO6MsFGYn-PrNdMIXGkhKuM-wl8hknv"
+  },
+  {
+   "item_id": 3,
+   "owner_id": 1,
+   "category_id": 2,
+   "location_id": 7,
+   "title": "Pure Wool Knit Crewneck",
+   "size": "Size S",
+   "condition": "Like New",
+   "status": "available",
+   "listed_at": "2025-10-20 08:45:00",
+   "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAz5YSq5NecD24QACVnPBbebh7gQ6qLoo4CINO_Uzm9960a0A6gDaWUDvKm-rCt4G_yQ3e3rEc96EeFxKL16RbqHAdzriCfBdxwGBt5DE9pMx2vIb5FzPWeggJNj0kC_YZ_HYGEhpxn2cuFrgijoB9tiwbW-dhsgk2Oc-iTeCnd1zknJpguNjeWSHPC-daVYt19QiTteCmAIxVUtPZcoflZCK6giigmfSkxrg6dmy6wSL_Eqr-Z4-Ao"
+  },
+  {
+   "item_id": 4,
+   "owner_id": 4,
+   "category_id": 1,
+   "location_id": 8,
+   "title": "Duck Canvas Heavyweight Overshirt",
+   "size": "Size L",
+   "condition": "Gently Used",
+   "status": "available",
+   "listed_at": "2025-10-21 16:00:00",
+   "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuBRXuRzD65I3op0H9v4akNpMD-pYCI8h_zH9xifpEGv8MKAEmk7k8XFkDM6QnHsQers000Wz28ovX-eC8Q7YQzLmVeL6Wq4Ux4BGoYmgVN2G3bG1poZkdhJq5bt1kzPFD5kE5PjGXnmxuuiV5teSWksjUB2P3fEETai9Jr-BKq_gbWT24xetP1Kiqjnk2QXSymNzgUKixj6SiwosDVhAiIJRAyLUu8A0v3uxWvmWJaDJn8jr_4qClgA"
+  },
+  {
+   "item_id": 5,
+   "owner_id": 2,
+   "category_id": 4,
+   "location_id": 9,
+   "title": "Corduroy Overshirt (Charity Drop)",
+   "size": "Size M",
+   "condition": "Gently Used",
+   "status": "available",
+   "listed_at": "2025-10-22 12:00:00",
+   "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuBRXuRzD65I3op0H9v4akNpMD-pYCI8h_zH9xifpEGv8MKAEmk7k8XFkDM6QnHsQers000Wz28ovX-eC8Q7YQzLmVeL6Wq4Ux4BGoYmgVN2G3bG1poZkdhJq5bt1kzPFD5kE5PjGXnmxuuiV5teSWksjUB2P3fEETai9Jr-BKq_gbWT24xetP1Kiqjnk2QXSymNzgUKixj6SiwosDVhAiIJRAyLUu8A0v3uxWvmWJaDJn8jr_4qClgA"
+  },
+  {
+   "item_id": 6,
+   "owner_id": 1,
+   "category_id": 5,
+   "location_id": 10,
+   "title": "Linen Midi Dress",
+   "size": "Size XS",
+   "condition": "Brand New",
+   "status": "available",
+   "listed_at": "2025-10-23 09:30:00",
+   "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAz5YSq5NecD24QACVnPBbebh7gQ6qLoo4CINO_Uzm9960a0A6gDaWUDvKm-rCt4G_yQ3e3rEc96EeFxKL16RbqHAdzriCfBdxwGBt5DE9pMx2vIb5FzPWeggJNj0kC_YZ_HYGEhpxn2cuFrgijoB9tiwbW-dhsgk2Oc-iTeCnd1zknJpguNjeWSHPC-daVYt19QiTteCmAIxVUtPZcoflZCK6giigmfSkxrg6dmy6wSL_Eqr-Z4-Ao"
+  },
+  {
+   "item_id": 7,
+   "owner_id": 4,
+   "category_id": 1,
+   "location_id": 11,
+   "title": "Waxed Utility Jacket",
+   "size": "Size M",
+   "condition": "Gently Used",
+   "status": "available",
+   "listed_at": "2025-10-24 15:20:00",
+   "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuBRXuRzD65I3op0H9v4akNpMD-pYCI8h_zH9xifpEGv8MKAEmk7k8XFkDM6QnHsQers000Wz28ovX-eC8Q7YQzLmVeL6Wq4Ux4BGoYmgVN2G3bG1poZkdhJq5bt1kzPFD5kE5PjGXnmxuuiV5teSWksjUB2P3fEETai9Jr-BKq_gbWT24xetP1Kiqjnk2QXSymNzgUKixj6SiwosDVhAiIJRAyLUu8A0v3uxWvmWJaDJn8jr_4qClgA"
+  },
+  {
+   "item_id": 8,
+   "owner_id": 2,
+   "category_id": 3,
+   "location_id": 12,
+   "title": "Raw Denim Petit Standard",
+   "size": "Size 31",
+   "condition": "Like New",
+   "status": "available",
+   "listed_at": "2025-10-25 11:00:00",
+   "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuB6LWc-9CSgBIhsDsu6aBeM9fibvsQDYUUmqZr58MPZQ7H6BwIpRStA8Pktc3j7I_fl_afzP7Z0Y-htIdiV6ZZwz8savgYh7X4X4561KmOPakTwAARdmsgD9p1AYHKJfdFpn-zFvgtyZ4N4q6aa1OL8L52MBu-IleT5WSergJVd3T7CfsuokFL8yp31d-hd1XzHbU_EcMAXDGsGriB2yNdQbpbndumPjxm4-eifSfkn-zykpSu6XyM7"
+  }
+ ],
+ "thrift": [
+  {
+   "thrift_listing_id": 1,
+   "item_id": 1,
+   "price": 24,
+   "status": "active",
+   "listed_at": "2025-10-18 10:10:00"
+  },
+  {
+   "thrift_listing_id": 4,
+   "item_id": 4,
+   "price": 28,
+   "status": "active",
+   "listed_at": "2025-10-21 16:15:00"
+  },
+  {
+   "thrift_listing_id": 5,
+   "item_id": 5,
+   "price": 0,
+   "status": "active",
+   "listed_at": "2025-10-22 12:10:00"
+  },
+  {
+   "thrift_listing_id": 6,
+   "item_id": 6,
+   "price": 19,
+   "status": "active",
+   "listed_at": "2025-10-23 09:40:00"
+  },
+  {
+   "thrift_listing_id": 7,
+   "item_id": 7,
+   "price": 52,
+   "status": "active",
+   "listed_at": "2025-10-24 15:30:00"
+  },
+  {
+   "thrift_listing_id": 8,
+   "item_id": 8,
+   "price": 38,
+   "status": "active",
+   "listed_at": "2025-10-25 11:15:00"
+  }
+ ],
+ "orders": [
+  {
+   "order_id": 1,
+   "thrift_listing_id": 1,
+   "buyer_id": 1,
+   "sale_price": 24,
+   "order_status": "ready_for_pickup",
+   "ordered_at": "2025-10-26 11:20:00"
+  }
+ ],
+ "requests": [
+  {
+   "request_id": 1,
+   "requester_id": 1,
+   "requested_item_id": 2,
+   "offered_item_id": 3,
+   "status": "pending",
+   "requested_at": "2025-10-27 09:15:00"
+  }
+ ],
+ "foundations": [
+  {
+   "foundation_id": 1,
+   "foundation_name": "Campus Student Clothing Bank",
+   "description": "Run collaboratively with the Student Financial Aid Council, providing free everyday wardrobe pieces and professional interview attire directly to verified students in need.",
+   "cause_area": "Student Welfare",
+   "service_area": "Campus & Metro",
+   "contact_email": "clothingbank@campus.edu",
+   "website_url": "https://campus.edu",
+   "status": "active",
+   "program": {
+    "name": "Fall Semester Wardrobe Essentials Drive",
+    "description": "Ensuring every student has access to clean, confident, and season-ready clothing without financial stress.",
+    "beneficiaries": "Supporting peer students with interview & everyday wardrobe essentials"
+   }
+  },
+  {
+   "foundation_id": 2,
+   "foundation_name": "University Winter Coat Drive",
+   "description": "An annual initiative led by the student sustainability coalition that collects heavy outerwear, insulated jackets, wool sweaters, and gloves for distribution before winter.",
+   "cause_area": "Community Warmth",
+   "service_area": "Campus & Metro",
+   "contact_email": "coatdrive@campus.edu",
+   "website_url": "https://campus.edu",
+   "status": "active",
+   "program": {
+    "name": "Winter Outerwear & Blanket Drive",
+    "description": "Zero wearable winter coats left sitting unused in dorm closets.",
+    "beneficiaries": "Keeping local community shelters & vulnerable campus workers warm"
+   }
+  },
+  {
+   "foundation_id": 3,
+   "foundation_name": "Hope Community Shelter Network",
+   "description": "A 15-year partner of the university organizing weekly pickups of donated casual clothing, footwear, and bedding for family shelters and unhoused individuals.",
+   "cause_area": "Metro Relief",
+   "service_area": "Campus & Metro",
+   "contact_email": "partnerships@hopeshelter.org",
+   "website_url": "https://hopeshelter.org",
+   "status": "active",
+   "program": {
+    "name": "Everyday Essentials & Sturdy Footwear",
+    "description": "Dignified clothing access for every member of our wider city community.",
+    "beneficiaries": "Direct textile distribution to emergency shelters across the metro area"
+   }
+  }
+ ],
+ "donations": [
+  {
+   "donation_id": 1,
+   "item_id": 5,
+   "donor_id": 2,
+   "foundation_id": 1,
+   "donation_status": "verified_by_council",
+   "collection_method": "box-2",
+   "requested_at": "2025-10-24 16:00:00",
+   "completed_at": "2025-10-24 16:00:00"
+  }
+ ],
+ "reviews": [
+  {
+   "review_id": 1,
+   "reviewer_id": 1,
+   "order_id": 1,
+   "exchange_id": null,
+   "rating": 5,
+   "comment": "Super easy pickup outside North Hall! Item was spotless and exactly as described. Love this platform!",
+   "created_at": "2025-10-26 17:00:00"
+  },
+  {
+   "review_id": 2,
+   "reviewer_id": 4,
+   "order_id": null,
+   "exchange_id": null,
+   "rating": 5,
+   "comment": "Flawless 1:1 barter trade. Garment was folded and smelled great. Would swap again anytime.",
+   "created_at": "2025-10-22 13:45:00"
+  }
+ ]
+}
