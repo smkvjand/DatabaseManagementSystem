@@ -1,31 +1,3 @@
-```{=html}
-<p align="center">
-```
-`<img src="assets/rewear-hero.svg" alt="reWear — Good clothes deserve a second life" width="100%" />`{=html}
-```{=html}
-</p>
-```
-```{=html}.  
-<p align="center">
-```
-`<em>`{=html}A sustainable clothing exchange platform for giving
-pre-loved fashion another chapter.`</em>`{=html}
-```{=html}
-</p>
-```
-```{=html}
-<p align="center">
-```
-`<a href="#the-idea">`{=html}The idea`</a>`{=html}  · 
-`<a href="#what-it-can-do">`{=html}What it can do`</a>`{=html}  · 
-`<a href="#built-with">`{=html}Built with`</a>`{=html}  · 
-`<a href="#getting-started">`{=html}Getting started`</a>`{=html}
-```{=html}
-</p>
-```
-
-------------------------------------------------------------------------
-
 ## The idea
 
 Clothes are made to be worn --- not forgotten at the back of a wardrobe.
