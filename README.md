@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # reWear – Next.js 15 + React 19 + MySQL/TiDB
 
 ## Run on localhost with LOCAL MySQL
@@ -11,6 +12,9 @@ Check DB link: http://localhost:3000/api/health  ->  {"status":"ok","db":true}
 
 ## Run on localhost with TiDB
 Same steps, but put Option B values in `.env.local` (DB_SSL=true, port 4000).
+=======
+## The idea
+>>>>>>> b696a4734000182f2bd810ae4d552f628ce2155b
 
 ## Image uploads (Cloudinary)
 1. `npm install` (installs `cloudinary`), add `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` to `.env.local`.
