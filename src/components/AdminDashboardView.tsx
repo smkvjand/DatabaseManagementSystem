@@ -346,44 +346,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           </div>
         )}
 
-        {/* 5. User Roles */}
-        {activeTab === 'users' && (
-          <div className="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden">
-            <table className="w-full text-left text-[13px]">
-              <thead className="bg-[#F5F5F7] text-[11px] uppercase font-semibold text-[#86868B]">
-                <tr>
-                  <th className="px-5 py-3">Student / User</th>
-                  <th className="px-4 py-3">Email & Dorm</th>
-                  <th className="px-4 py-3">Current Role</th>
-                  <th className="px-4 py-3">Eco Points</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F2F2F7]">
-                {allUsers.map((u) => (
-                  <tr key={u.id} className="hover:bg-[#FAF9F6]">
-                    <td className="px-5 py-3 font-medium text-[#161617] flex items-center gap-3">
-                      <img
-                        src={u.avatarUrl}
-                        alt=""
-                        className="w-8 h-8 rounded-full object-cover ring-1 ring-[#E5E5EA]"
-                      />
-                      <span>{u.name}</span>
-                    </td>
-                    <td className="px-4 py-3 text-[#414844]">
-                      {u.email} ({u.campusDorm})
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full bg-[#161617] text-white">
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-emerald-800">{u.ecoPoints}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {activeTab === 'users' && <p className="text-[13px] text-[#86868B]">Search, promote and remove users in “Users &amp; admins” below.</p>}
       </div>
       <AdminDocsPanel />
       <AdminConsole />

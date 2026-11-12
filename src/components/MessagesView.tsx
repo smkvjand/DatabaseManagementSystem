@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUp, ChevronLeft, Search, Trash2, MessageCircle } from 'lucide-react';
+import { ArrowUp, ChevronLeft, Search, Trash2, MessageCircle, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { StorageService } from '../services/storage';
 
@@ -27,6 +27,12 @@ export const MessagesView: React.FC = () => {
   const [query, setQuery] = useState('');
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const [reqs, setReqs] = useState<any[]>([]);
+  const [menu, setMenu] = useState(false);
+  const [cerr, setCerr] = useState('');
+  const loadReqs = () => StorageService.contacts().then(setReqs).catch(() => {});
+  useEffect(() => { loadReqs(); const t = setInterval(loadReqs, 15000); return () => clearInterval(t); }, []);
+  const act = async (fn: () => Promise<any>) => { setCerr(''); try { await fn(); await loadReqs(); } catch (e: any) { setCerr(e.message || 'Something went wrong'); } };
 
   useEffect(() => StorageService.subscribe(() => tick((t) => t + 1)), []);
   useEffect(() => {
@@ -121,6 +127,39 @@ export const MessagesView: React.FC = () => {
                 <Avatar name={nameOf(withId)} size={38} />
                 <div><div className="text-[15px] font-semibold text-[#161617] leading-tight">{nameOf(withId)}</div><div className="text-[12px] text-[#86868B]">reWear campus member</div></div>
               </div>
+              {(() => {
+                const mine = reqs.filter((r) => [r.requesterId, r.recipientId].includes(withId) && [r.requesterId, r.recipientId].includes(me) && r.status !== 'declined');
+                if (!mine.length && !cerr) return null;
+                const label = (k: string) => (k === 'phone' ? 'WhatsApp' : 'Instagram');
+                return (
+                  <div className="px-5 pt-3 space-y-2">
+                    {cerr && <div className="text-[12px] text-red-600">{cerr}</div>}
+                    {mine.map((r) => {
+                      const incoming = r.recipientId === me;
+                      return (
+                        <div key={r.id} className="flex items-center justify-between gap-3 rounded-xl bg-[#F5F5F7] px-4 py-2.5 text-[13px]">
+                          {r.status === 'accepted' ? (
+                            <>
+                              <span>{label(r.kind)} shared</span>
+                              {r.theirValue
+                                ? <a className="font-semibold text-[#0a7aff]" target="_blank" rel="noopener noreferrer" href={r.kind === 'phone' ? `https://wa.me/${String(r.theirValue).replace(/\D/g, '')}` : `https://instagram.com/${r.theirValue}`}>{r.kind === 'phone' ? r.theirValue : '@' + r.theirValue}</a>
+                                : <span className="text-[#86868B]">Not available</span>}
+                            </>
+                          ) : incoming ? (
+                            <>
+                              <span>{nameOf(withId)} wants to exchange {label(r.kind)}</span>
+                              <span className="flex gap-2 shrink-0">
+                                <button className="px-3 py-1 rounded-full bg-[#161617] text-white cursor-pointer" onClick={() => act(() => StorageService.respondContact(r.id, 'accept'))}>Accept</button>
+                                <button className="px-3 py-1 rounded-full border border-[#E5E5EA] cursor-pointer" onClick={() => act(() => StorageService.respondContact(r.id, 'decline'))}>Decline</button>
+                              </span>
+                            </>
+                          ) : <span className="text-[#86868B]">{label(r.kind)} request sent. Waiting for {nameOf(withId)}.</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               <div className="msg-scroll flex-1 px-5 py-4">
                 {thread.map((m, i) => {
@@ -146,6 +185,15 @@ export const MessagesView: React.FC = () => {
               </div>
 
               <div className="msg-composer">
+                <div className="relative self-center -ml-2">
+                  <button onClick={() => setMenu(!menu)} className="cursor-pointer w-8 h-8 grid place-items-center rounded-full bg-[rgba(120,120,128,.18)] text-[#3c3c43]" title="Share contact" aria-label="Share contact"><Plus size={18} strokeWidth={2.5} /></button>
+                  {menu && (
+                    <div className="absolute left-0 bottom-full mb-2 z-20 w-56 rounded-xl bg-white border border-[#E5E5EA] shadow-lg p-1 text-[13px]">
+                      <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F5F5F7] cursor-pointer" onClick={() => { setMenu(false); act(() => StorageService.requestContact(withId, 'phone')); }}>Request WhatsApp number</button>
+                      <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F5F5F7] cursor-pointer" onClick={() => { setMenu(false); act(() => StorageService.requestContact(withId, 'instagram')); }}>Request Instagram</button>
+                    </div>
+                  )}
+                </div>
                 <textarea
                   className="msg-input" rows={1} value={text} maxLength={1000} placeholder="Message"
                   onChange={(e) => { setText(e.target.value); e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'; }}

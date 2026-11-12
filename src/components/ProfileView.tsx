@@ -22,6 +22,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [editingProfile, setEditingProfile] = useState(false);
   const [editName, setEditName] = useState(currentUser.name);
   const [editBio, setEditBio] = useState(currentUser.bio || '');
+  const [editPhone, setEditPhone] = useState(currentUser.phone || '');
+  const [editIg, setEditIg] = useState(currentUser.instagram || '');
   const [editDorm, setEditDorm] = useState(currentUser.campusDorm);
 
   // My listings
@@ -49,6 +51,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     updateProfile({
       name: editName,
       bio: editBio,
+      phone: editPhone,
+      instagram: editIg,
       campusDorm: editDorm,
     });
     setEditingProfile(false);
@@ -143,6 +147,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   onChange={(e) => setEditBio(e.target.value)}
                   className="w-full px-3 py-2 text-[13px] rounded-lg border border-[#E5E5EA]"
                 />
+              </div>
+              <div>
+                <label className="text-[11px] uppercase font-semibold text-[#86868B] block mb-1">WhatsApp number</label>
+                <input type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="+91 98765 43210" className="w-full px-3 py-2 text-[13px] rounded-lg border border-[#E5E5EA]" />
+              </div>
+              <div>
+                <label className="text-[11px] uppercase font-semibold text-[#86868B] block mb-1">Instagram username</label>
+                <input type="text" value={editIg} onChange={(e) => setEditIg(e.target.value)} placeholder="@yourname" className="w-full px-3 py-2 text-[13px] rounded-lg border border-[#E5E5EA]" />
+                <p className="text-[11px] text-[#86868B] mt-1">Private. Only shared with someone when you accept their request in Messages.</p>
               </div>
             </div>
             <div className="flex justify-end gap-2">

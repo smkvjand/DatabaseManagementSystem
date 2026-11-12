@@ -10,6 +10,8 @@ export const AdminConsole: React.FC = () => {
   const [err, setErr] = useState('');
   const [over, setOver] = useState<Record<string, string>>({});
   const [gone, setGone] = useState<string[]>([]);
+  const [uq, setUq] = useState('');
+  const [page, setPage] = useState(0);
   const [box, setBox] = useState({ name: '', campusZone: '', buildingName: '', floorLocation: '', hours: '' });
   const load = () => StorageService.adminConsole().then(setC).catch((e) => setErr(e.message));
   useEffect(() => { load(); }, []);
@@ -21,6 +23,10 @@ export const AdminConsole: React.FC = () => {
     if (role === 'charity') { fid = Number(prompt('Foundation ID:\n' + c.charities.map((f: any) => `${f.id} = ${f.name}`).join('\n'))); if (!fid) return; }
     go(() => StorageService.setUserRole(u.id, role, fid), () => setOver({ ...over, [u.id]: role }));
   };
+  const needle = uq.trim().toLowerCase();
+  const filtered = allUsers.filter((u) => !gone.includes(u.id) && (!needle || `${u.name} ${u.email} ${over[u.id] || u.role}`.toLowerCase().includes(needle)));
+  const pages = Math.max(1, Math.ceil(filtered.length / 10)), cur = Math.min(page, pages - 1);
+  const pageUsers = filtered.slice(cur * 10, cur * 10 + 10);
   const inp = 'w-full px-3 py-2 text-[14px]';
   const h2 = 'text-xl font-semibold mb-3';
 
@@ -29,8 +35,10 @@ export const AdminConsole: React.FC = () => {
       {err && <div className="text-[13px] text-red-600">{err}</div>}
       <section>
         <h2 className={h2}>Users & admins {c.isSuper ? <span className="text-[12px] font-medium text-emerald-800 ml-2">Super admin: you can appoint admins</span> : <span className="text-[12px] font-normal text-[#6e6e73] ml-2">Only {c.superEmail} can appoint admins</span>}</h2>
+        <input className="w-full px-4 py-2.5 text-[14px] mb-3" placeholder="Search by name, email or role" value={uq} onChange={(e) => { setUq(e.target.value); setPage(0); }} />
         <div className="space-y-2">
-          {allUsers.filter((u) => !gone.includes(u.id)).map((u) => {
+          {!pageUsers.length && <div className="text-[13px] text-[#6e6e73]">No users match.</div>}
+          {pageUsers.map((u) => {
             const role = over[u.id] || u.role, locked = u.id === currentUser.id || u.email.toLowerCase() === c.superEmail || (role === 'admin' && !c.isSuper);
             return (
               <div key={u.id} className="glass-panel p-3 flex items-center justify-between gap-3 text-[14px]">
@@ -44,6 +52,13 @@ export const AdminConsole: React.FC = () => {
               </div>
             );
           })}
+        </div>
+        <div className="flex items-center justify-between mt-3 text-[13px] text-[#6e6e73]">
+          <span>{filtered.length} user{filtered.length === 1 ? '' : 's'} · page {cur + 1} of {pages}</span>
+          <span className="flex gap-2">
+            <button disabled={cur === 0} onClick={() => setPage(cur - 1)} className="px-3 py-1 rounded-full border border-[#E5E5EA] disabled:opacity-30 cursor-pointer">Prev</button>
+            <button disabled={cur >= pages - 1} onClick={() => setPage(cur + 1)} className="px-3 py-1 rounded-full border border-[#E5E5EA] disabled:opacity-30 cursor-pointer">Next</button>
+          </span>
         </div>
       </section>
 

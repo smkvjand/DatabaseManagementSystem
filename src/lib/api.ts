@@ -100,8 +100,9 @@ async function categoryId(c: any, ref: string): Promise<number> {
 
 // ---------- bootstrap: whole read model in UI shape ----------
 async function bootstrap(uid: number) {
+  await contactInit();
   const [users, cats, items, imgs, thrift, orders, reqs, exch, found, progs, dons, revs, wl, prefs, dop, msgs] = await Promise.all([
-    q('SELECT u.user_id,u.name,u.email,u.role,u.foundation_id,u.created_at,l.city FROM `user` u LEFT JOIN location l ON l.location_id=u.location_id'),
+    q('SELECT u.user_id,u.name,u.email,u.role,u.foundation_id,u.created_at,u.phone,u.bio,u.instagram,l.city FROM `user` u LEFT JOIN location l ON l.location_id=u.location_id'),
     q('SELECT * FROM category ORDER BY category_id'),
     q('SELECT ci.*, c.category_name, l.city FROM clothing_item ci LEFT JOIN category c ON c.category_id=ci.category_id LEFT JOIN location l ON l.location_id=ci.location_id'),
     // SELECT * on purpose: keeps the API booting even before the public_id migration is applied.
@@ -204,7 +205,7 @@ async function bootstrap(uid: number) {
 
   const usersUi = users.map((u) => ({
     id: String(u.user_id), name: u.name, email: u.email, role: ({ admin: 'admin', charity: 'charity', user: 'student' } as const)[roleOf(u.role)],
-    campusDorm: u.city || 'Campus', studentId: `STU-${String(u.user_id).padStart(4, '0')}`, avatarUrl: avatar(u.name), bio: '',
+    campusDorm: u.city || 'Campus', studentId: `STU-${String(u.user_id).padStart(4, '0')}`, avatarUrl: avatar(u.name), bio: u.bio || '', ...(u.user_id === uid ? { phone: u.phone || '', instagram: u.instagram || '' } : {}),
     ecoPoints: 50 + 10 * items.filter((i) => i.owner_id === u.user_id).length + 15 * orders.filter((o) => o.buyer_id === u.user_id).length + 20 * dons.filter((d) => d.donor_id === u.user_id).length,
     createdAt: iso(u.created_at),
   }));
@@ -450,11 +451,57 @@ R('PUT', '/api/preferences', async (c) => tx(async (cn) => {
   return { ok: true };
 }));
 
-R('PATCH', '/api/me', async (c) => tx(async (cn) => {
+// ---------- contact sharing (WhatsApp / Instagram), only after the other person accepts ----------
+let contactReady: Promise<any> | null = null;
+const contactInit = () => (contactReady ||= (async () => {
+  await q("CREATE TABLE IF NOT EXISTS contact_request (request_id INT PRIMARY KEY, requester_id INT NOT NULL, recipient_id INT NOT NULL, kind VARCHAR(10) NOT NULL, status VARCHAR(10) NOT NULL DEFAULT 'pending', created_at DATETIME, responded_at DATETIME, KEY idx_cr_req (requester_id), KEY idx_cr_rec (recipient_id))");
+  const cols = (await q('SHOW COLUMNS FROM `user`')).map((c: any) => c.Field);
+  for (const [n, d] of [['phone', 'VARCHAR(25)'], ['bio', 'VARCHAR(255)'], ['instagram', 'VARCHAR(30)']]) if (!cols.includes(n)) await q(`ALTER TABLE \`user\` ADD COLUMN ${n} ${d} NULL`);
+})().catch((e) => { contactReady = null; throw e; }));
+const kindCol = (k: string) => (k === 'phone' ? 'phone' : k === 'instagram' ? 'instagram' : null);
+
+R('PATCH', '/api/me', async (c) => { await contactInit(); return tx(async (cn) => {
   if (c.body.name) await cn.query('UPDATE `user` SET name=? WHERE user_id=?', [String(c.body.name).slice(0, 50), c.uid]);
   if (c.body.campusDorm) await cn.query('UPDATE `user` SET location_id=? WHERE user_id=?', [await locationId(cn, c.body.campusDorm), c.uid]);
+  if (typeof c.body.bio === 'string') await cn.query('UPDATE `user` SET bio=? WHERE user_id=?', [c.body.bio.slice(0, 255), c.uid]);
+  if (typeof c.body.phone === 'string') {
+    const ph = c.body.phone.trim();
+    if (ph && !/^\+?[0-9 ()-]{7,20}$/.test(ph)) throw new HttpError(400, 'Enter a valid phone number, e.g. +91 98765 43210');
+    await cn.query('UPDATE `user` SET phone=? WHERE user_id=?', [ph || null, c.uid]);
+  }
+  if (typeof c.body.instagram === 'string') {
+    const ig = c.body.instagram.trim().replace(/^@/, '');
+    if (ig && !/^[A-Za-z0-9._]{1,30}$/.test(ig)) throw new HttpError(400, 'Enter a valid Instagram username');
+    await cn.query('UPDATE `user` SET instagram=? WHERE user_id=?', [ig || null, c.uid]);
+  }
   return { ok: true };
-}));
+}); });
+
+R('GET', '/api/contacts', async (c) => {
+  await contactInit();
+  return (await q('SELECT r.*, a.phone ap, a.instagram ai, b.phone bp, b.instagram bi FROM contact_request r JOIN `user` a ON a.user_id=r.requester_id JOIN `user` b ON b.user_id=r.recipient_id WHERE r.requester_id=? OR r.recipient_id=? ORDER BY r.request_id', [c.uid, c.uid]))
+    .map((r) => ({ id: r.request_id, requesterId: String(r.requester_id), recipientId: String(r.recipient_id), kind: r.kind, status: r.status, at: iso(r.created_at),
+      theirValue: r.status === 'accepted' ? (c.uid === r.requester_id ? (r.kind === 'phone' ? r.bp : r.bi) : (r.kind === 'phone' ? r.ap : r.ai)) || '' : undefined }));
+});
+R('POST', '/api/contacts', async (c) => {
+  await contactInit();
+  const col = kindCol(c.body.kind), to = Number(c.body.recipientId);
+  if (!col) throw new HttpError(400, 'kind must be phone or instagram');
+  if (!Number.isInteger(to) || to === c.uid || !(await q('SELECT 1 FROM `user` WHERE user_id=?', [to])).length) throw new HttpError(400, 'Choose another user');
+  const [me] = await q(`SELECT ${col} v FROM \`user\` WHERE user_id=?`, [c.uid]);
+  if (!me?.v) throw new HttpError(400, `Add your ${col === 'phone' ? 'WhatsApp number' : 'Instagram'} in your profile first, since you both exchange details`);
+  if ((await q("SELECT 1 FROM contact_request WHERE kind=? AND status IN ('pending','accepted') AND ((requester_id=? AND recipient_id=?) OR (requester_id=? AND recipient_id=?))", [c.body.kind, c.uid, to, to, c.uid])).length) throw new HttpError(409, 'A request for this already exists');
+  return { id: await tx((cn) => ins(cn, 'contact_request', 'request_id', { requester_id: c.uid, recipient_id: to, kind: c.body.kind, status: 'pending', created_at: new Date() })) };
+});
+R('PATCH', '/api/contacts/(\\d+)', async (c) => {
+  await contactInit();
+  const [r] = await q('SELECT * FROM contact_request WHERE request_id=?', [c.params[0]]);
+  if (!r || r.recipient_id !== c.uid || r.status !== 'pending') throw new HttpError(404, 'Request not found');
+  const accept = c.body.action === 'accept';
+  if (accept) { const [me] = await q(`SELECT ${kindCol(r.kind)} v FROM \`user\` WHERE user_id=?`, [c.uid]); if (!me?.v) throw new HttpError(400, `Add your ${r.kind === 'phone' ? 'WhatsApp number' : 'Instagram'} in your profile first, since you both exchange details`); }
+  await q('UPDATE contact_request SET status=?, responded_at=NOW() WHERE request_id=?', [accept ? 'accepted' : 'declined', r.request_id]);
+  return { ok: true };
+});
 
 // ---------- messages (table: message) ----------
 R('GET', '/api/messages', async (c) => (await q('SELECT * FROM message WHERE sender_id=? OR recipient_id=? ORDER BY sent_at, message_id', [c.uid, c.uid])).map(msgUi));

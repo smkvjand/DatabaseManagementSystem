@@ -51,6 +51,9 @@ export class StorageService {
   static adminDocs() { return call<any[]>('GET', '/admin/charity-docs'); }
   static adminDocData(id: number) { return call<{ data: string }>('GET', `/admin/charity-docs/${id}`); }
   static reviewDoc(id: number, status: string, note = '') { return call('PATCH', `/admin/charity-docs/${id}`, { status, note }); }
+  static contacts() { return call<any[]>('GET', '/contacts'); }
+  static requestContact(recipientId: string, kind: string) { return call('POST', '/contacts', { recipientId, kind }); }
+  static respondContact(id: number, action: string) { return call('PATCH', `/contacts/${id}`, { action }); }
   static adminConsole() { return call<any>('GET', '/admin/console'); }
   static setUserRole(id: string, role: string, foundationId?: number) { return call('PATCH', `/users/${id}/role`, { role, foundationId }); }
   static deleteUser(id: string) { return call('DELETE', `/admin/users/${id}`); }
@@ -62,18 +65,15 @@ export class StorageService {
 
   // ---- users ----
   static getUsers(): User[] {
-    const extras = lsGet<Record<string, Partial<User>>>('extras', {});
-    return (cache?.users || []).map((u: User) => ({ ...u, ...(extras[u.id] || {}) }));
+    return (cache?.users || []) as User[];
   }
   static getUserById(id: string) { return this.getUsers().find((u) => u.id === id); }
   static updateUser(updated: Partial<User> & { id: string }): User {
     const { id, name, campusDorm, ...rest } = updated;
-    const extras = lsGet<Record<string, Partial<User>>>('extras', {});
-    extras[id] = { ...(extras[id] || {}), phone: rest.phone ?? extras[id]?.phone, bio: rest.bio ?? extras[id]?.bio };
-    lsSet('extras', extras);
     const u = cache.users.find((x: User) => x.id === id);
     if (name) u.name = name; if (campusDorm) u.campusDorm = campusDorm;
-    if (name || campusDorm) bg(call('PATCH', '/me', { name, campusDorm }));
+    Object.assign(u, Object.fromEntries((['phone', 'bio', 'instagram'] as const).filter((k) => rest[k] !== undefined).map((k) => [k, rest[k]])));
+    bg(call('PATCH', '/me', { name, campusDorm, phone: rest.phone, bio: rest.bio, instagram: rest.instagram }));
     return this.getUserById(id)!;
   }
 

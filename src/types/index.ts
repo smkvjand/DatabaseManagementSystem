@@ -19,6 +19,7 @@ export interface User {
   studentId: string;
   avatarUrl: string;
   phone?: string;
+  instagram?: string;
   bio?: string;
   ecoPoints: number;
   createdAt: string;
