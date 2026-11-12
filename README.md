@@ -197,6 +197,8 @@ Vercel limits request bodies to about 4.5 MB, so keep each image upload request 
 - Every query is parameterised.
 - Other users' phone and Instagram are returned only after an accepted contact request.
 - Database connections use TLS 1.2 or newer.
+## Contributors:
+- Srimuralikrishna V Jandhyala: Made the draft of the frontend. Used AI to create the frontend and react structures and project structure. Created the tables for User based in MySQL database and also the User information. Hosted the website on Vercel using the Github to store the files. Hosted and managed the database on Cloud using TiDB. Connected the Database and the frontend vercel hosted website and also the backend. Made the UI into Apple Design. Helped in the population of data in the database. Created the pages of charity, messages, marketplace and also the admin pages and the charity pages with the help of AI.
 
 ---
 
