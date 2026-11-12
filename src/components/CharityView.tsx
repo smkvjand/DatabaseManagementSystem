@@ -1,21 +1,16 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
-import { useAuth } from '../context/AuthContext';
-import { StorageService } from '../services/storage';
 import { DropBoxLocation, CharityFoundation } from '../types';
 
 interface CharityViewProps {
   onOpenDonationModal: (preselectedBoxId?: string, preselectedCharityId?: string) => void;
   onOpenImpactReport: () => void;
-  onMessageCharity?: (hostUserId?: string) => void;
 }
 
 export const CharityView: React.FC<CharityViewProps> = ({
   onOpenDonationModal,
   onOpenImpactReport,
-  onMessageCharity,
 }) => {
-  const { currentUser, isCharityHost } = useAuth();
   const { dropBoxes, charities, impactReport, donations } = useData();
   const [selectedZone, setSelectedZone] = useState<string>('all');
 
@@ -114,75 +109,46 @@ export const CharityView: React.FC<CharityViewProps> = ({
 
         {/* Bins Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredBoxes.map((box) => (
-            <div
-              key={box.id}
-              className="p-5 rounded-2xl bg-white border border-[#E5E5EA] flex flex-col justify-between hover:border-[#161617]/40 transition-all shadow-xs"
-            >
-              <div>
-                <div className="flex items-center justify-between text-[11px] text-[#86868B] mb-2 font-medium">
-                  <span className="uppercase tracking-wider">{box.campusZone}</span>
-                  <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" />
-                    Active
-                  </span>
-                </div>
+          {filteredBoxes.map((box) => {
+            const full = box.currentFillPercent >= 95, warn = box.currentFillPercent > 80;
+            return (
+            <div key={box.id} className="bin-card p-6 flex flex-col">
+              <div className="flex items-center justify-between text-[11px] font-semibold tracking-wider uppercase mb-3">
+                <span className="text-[#86868B]">{box.campusZone}</span>
+                <span className={`inline-flex items-center gap-1.5 normal-case tracking-normal ${box.active === false ? 'text-[#86868B]' : 'text-emerald-700'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${box.active === false ? 'bg-[#86868B]' : 'bg-emerald-600'}`} />
+                  {box.active === false ? 'Offline' : 'Active'}
+                </span>
+              </div>
+              <h4 className="font-semibold text-[17px] text-[#161617] tracking-tight">{box.name}</h4>
+              <div className="text-[13px] text-[#414844] mt-1 font-medium">{box.buildingName}</div>
+              <div className="text-[12px] text-[#86868B] mt-0.5 flex-1">{box.floorLocation}</div>
 
-                <h4 className="font-semibold text-[15px] text-[#161617] tracking-tight">
-                  {box.name}
-                </h4>
-                <div className="text-[12px] text-[#414844] mt-1 font-medium">
-                  {box.buildingName}
+              <div className="mt-5 pt-4 border-t border-black/5">
+                <div className="flex items-center justify-between text-[12px] mb-2">
+                  <span className="text-[#86868B]">Bin capacity</span>
+                  <span className={`font-semibold ${warn ? 'text-amber-700' : 'text-emerald-700'}`}>{box.currentFillPercent}% full</span>
                 </div>
-                <div className="text-[11px] text-[#86868B] mt-0.5">
-                  {box.floorLocation}
+                <div className="w-full h-2 rounded-full bg-black/5 overflow-hidden">
+                  <div className={`h-full rounded-full transition-all duration-500 ${warn ? 'bg-amber-500' : 'bg-emerald-600'}`} style={{ width: `${box.currentFillPercent}%` }} />
                 </div>
-
-                {/* Fill Capacity Bar */}
-                <div className="mt-5 pt-3 border-t border-[#F2F2F7]">
-                  <div className="flex items-center justify-between text-[11px] mb-1 font-medium">
-                    <span className="text-[#86868B]">Bin Capacity</span>
-                    <span
-                      className={
-                        box.currentFillPercent > 80
-                          ? 'text-amber-700 font-semibold'
-                          : 'text-emerald-700 font-semibold'
-                      }
-                    >
-                      {box.currentFillPercent}% Full
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-[#F2F2F7] overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        box.currentFillPercent > 80 ? 'bg-amber-500' : 'bg-emerald-600'
-                      }`}
-                      style={{ width: `${box.currentFillPercent}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between text-[11px] text-[#86868B]">
-                  <span>Total Diverted:</span>
-                  <span className="font-medium text-[#161617]">{box.totalKgCollected} kg</span>
+                <div className="mt-3 flex items-center justify-between text-[12px] text-[#86868B]">
+                  <span>Total diverted</span>
+                  <span className="font-semibold text-[#161617]">{box.totalKgCollected} kg</span>
                 </div>
               </div>
 
-              <div className="mt-5">
-                <button
-                  onClick={() => onOpenDonationModal(box.id)}
-                  className="w-full py-2 rounded-xl bg-[#FAF9F6] border border-[#E5E5EA] text-[#161617] hover:bg-[#161617] hover:text-white transition-all text-[12px] font-medium cursor-pointer"
-                >
-                  Drop Off at this Bin
-                </button>
-              </div>
+              <button
+                onClick={() => onOpenDonationModal(box.id)}
+                disabled={full || box.active === false}
+                className="bin-btn mt-5 w-full py-2.5 rounded-full text-[13px] font-medium cursor-pointer"
+              >
+                {full ? 'Bin full' : 'Drop off at this bin'}
+              </button>
             </div>
-          ))}
+          );})}
         </div>
       </div>
-
-      {/* Charity host panel: only for accounts signed in via Charity Login */}
-      {isCharityHost && <CharityHostPanel charity={charities.find((c) => c.hostUserId === currentUser.id)} />}
 
       {/* Section: Partner Charity Foundations */}
       <div className="mt-16">
@@ -232,44 +198,9 @@ export const CharityView: React.FC<CharityViewProps> = ({
                   {charity.totalKgReceived} kg
                 </span>
               </div>
-              {onMessageCharity && charity.hostUserId && charity.hostUserId !== currentUser.id && (
-                <button
-                  onClick={() => onMessageCharity(charity.hostUserId)}
-                  className="mt-4 w-full py-2 rounded-xl bg-[#FAF9F6] border border-[#E5E5EA] text-[#161617] hover:bg-[#161617] hover:text-white transition-all text-[12px] font-medium cursor-pointer"
-                >
-                  Message Charity
-                </button>
-              )}
             </div>
           ))}
         </div>
-      </div>
-    </div>
-  );
-};
-
-// Edit the public profile of the charity hosted by the signed-in charity account.
-const CharityHostPanel: React.FC<{ charity?: CharityFoundation }> = ({ charity }) => {
-  const [f, setF] = useState({ name: charity?.name || '', description: charity?.description || '', category: charity?.category || '', location: charity?.location || '', contactEmail: charity?.contactEmail || '' });
-  const [msg, setMsg] = useState('');
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
-  const inp = 'w-full border border-[#E5E5EA] rounded-lg px-3 py-2 text-[13px] outline-none focus:border-[#161617]';
-  if (!charity) return null;
-  const save = async () => { setMsg(''); try { await StorageService.updateCharity(f); setMsg('Saved'); } catch { /* alert shown by storage layer */ } };
-  return (
-    <div className="mt-12 p-6 rounded-2xl bg-white border border-[#E5E5EA]">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-800">Charity host</div>
-      <h2 className="text-lg font-semibold text-[#161617] mb-4">Manage your charity profile</h2>
-      <div className="grid gap-3 md:grid-cols-2">
-        <input className={inp} placeholder="Name" value={f.name} onChange={set('name')} />
-        <input className={inp} placeholder="Cause" value={f.category} onChange={set('category')} />
-        <input className={inp} placeholder="Location" value={f.location} onChange={set('location')} />
-        <input className={inp} placeholder="Contact email" value={f.contactEmail} onChange={set('contactEmail')} />
-        <textarea className={`${inp} md:col-span-2`} rows={3} placeholder="Description" value={f.description} onChange={set('description')} />
-      </div>
-      <div className="mt-4 flex items-center gap-3">
-        <button onClick={save} className="px-5 py-2 rounded-full bg-[#161617] text-white text-[12px] font-medium cursor-pointer">Save profile</button>
-        {msg && <span className="text-[12px] text-emerald-800">{msg}</span>}
       </div>
     </div>
   );

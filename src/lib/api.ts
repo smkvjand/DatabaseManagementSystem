@@ -11,28 +11,29 @@ const pool: mysql.Pool = ((globalThis as any).__rewearPool ??= mysql.createPool(
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME || 'rewear',
-  ssl: process.env.DB_SSL === 'false' ? undefined : { minVersion: 'TLSv1.2', rejectUnauthorized: true },
+  ssl: process.env.DB_SSL === 'false' ? undefined : { minVersion: 'TLSv1.2', rejectUnauthorized: process.env.DB_SSL_STRICT !== 'false' },
   waitForConnections: true,
-  connectionLimit: 5,
+  connectionLimit: Number(process.env.DB_POOL || 3), maxIdle: 1, idleTimeout: 10000, connectTimeout: 10000, enableKeepAlive: true,
   timezone: 'Z',
 }));
 
-const SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+// Production must set JWT_SECRET (checked lazily so `next build` never fails on it)
+const secret = () => { const s = process.env.JWT_SECRET; if (!s && process.env.NODE_ENV === 'production') throw new Error('JWT_SECRET is not set'); return s || 'dev-secret-change-me'; };
 // Roles live in the DB (user.role). Nothing in env or request bodies can grant a role.
 
 // ---------- tiny JWT (HS256) ----------
 const b64 = (o: any) => Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toString('base64url');
-function sign(uid: number, ch = false) {
-  const h = b64({ alg: 'HS256', typ: 'JWT' }), p = b64({ uid, ...(ch ? { ch: 1 } : {}), exp: Date.now() + 7 * 864e5 }); // ch = token issued by Charity Login
-  return `${h}.${p}.${crypto.createHmac('sha256', SECRET).update(`${h}.${p}`).digest('base64url')}`;
+function sign(uid: number) {
+  const h = b64({ alg: 'HS256', typ: 'JWT' }), p = b64({ uid, exp: Date.now() + 7 * 864e5 });
+  return `${h}.${p}.${crypto.createHmac('sha256', secret()).update(`${h}.${p}`).digest('base64url')}`;
 }
-function verify(tok?: string): { uid: number; ch: boolean } | null {
+function verify(tok?: string): number | null {
   try {
     const [h, p, s] = (tok || '').split('.');
-    const good = crypto.createHmac('sha256', SECRET).update(`${h}.${p}`).digest('base64url');
+    const good = crypto.createHmac('sha256', secret()).update(`${h}.${p}`).digest('base64url');
     if (s.length !== good.length || !crypto.timingSafeEqual(Buffer.from(s), Buffer.from(good))) return null;
     const d = JSON.parse(Buffer.from(p, 'base64url').toString());
-    return d.exp > Date.now() ? { uid: d.uid, ch: d.ch === 1 } : null;
+    return d.exp > Date.now() ? d.uid : null;
   } catch { return null; }
 }
 
@@ -49,11 +50,13 @@ type Role = 'user' | 'charity' | 'admin';
 const roleOf = (raw: any): Role => { const s = String(raw || '').toLowerCase(); return s.includes('admin') ? 'admin' : /charit|foundation/.test(s) ? 'charity' : 'user'; };
 let roleLabels: string[] | undefined;
 async function dbRole(r: Role): Promise<string> {
-  if (!roleLabels) { const [col] = await q("SHOW COLUMNS FROM `user` LIKE 'role'"); roleLabels = [...String(col?.Type || '').matchAll(/'([^']*)'/g)].map((m) => m[1]); }
+  if (!roleLabels?.length) { const [col] = await q("SHOW COLUMNS FROM `user` LIKE 'role'"); roleLabels = [...String(col?.Type || '').matchAll(/'([^']*)'/g)].map((m) => m[1]); }
   const hit = roleLabels.find((v) => roleOf(v) === r);
   if (!hit) throw new HttpError(500, `user.role has no value for "${r}"`);
   return hit;
 }
+// "Both agree to delete": the first party's id is stored in the existing status column as 'completed|del:<uid>' (no schema change).
+const purgeMark = (st: any) => { const m = /\|del:(\d+)$/.exec(String(st || '')); return m ? m[1] : undefined; };
 const dropUi = (b: any) => ({
   id: String(b.dropoff_id), name: b.name, campusZone: b.campus_zone || '', buildingName: b.building_name || '', floorLocation: b.floor_details || '',
   hours: b.operating_hours || '', currentFillPercent: Number(b.fill_percent) || 0, active: !!b.is_active,
@@ -96,7 +99,7 @@ async function categoryId(c: any, ref: string): Promise<number> {
 }
 
 // ---------- bootstrap: whole read model in UI shape ----------
-async function bootstrap(uid: number, charitySession = false) {
+async function bootstrap(uid: number) {
   const [users, cats, items, imgs, thrift, orders, reqs, exch, found, progs, dons, revs, wl, prefs, dop, msgs] = await Promise.all([
     q('SELECT u.user_id,u.name,u.email,u.role,u.foundation_id,u.created_at,l.city FROM `user` u LEFT JOIN location l ON l.location_id=u.location_id'),
     q('SELECT * FROM category ORDER BY category_id'),
@@ -156,7 +159,7 @@ async function bootstrap(uid: number, charitySession = false) {
       id: String(r.request_id), requesterId: String(r.requester_id), receiverId: String(ownerOfItem(r.requested_item_id)),
       requestedListingId: String(r.requested_item_id), offeredItemId: String(r.offered_item_id),
       message: 'Exchange proposal', proposedLocation: itemBy[r.requested_item_id]?.city || 'Campus',
-      proposedDatetime: iso(r.requested_at), status: e?.status === 'completed' ? 'completed' : r.status,
+      proposedDatetime: iso(r.requested_at), status: String(e?.status || '').startsWith('completed') ? 'completed' : r.status, purgeBy: purgeMark(e?.status),
       createdAt: iso(r.requested_at), completedAt: e?.completed_at ? iso(e.completed_at) : undefined,
     };
   });
@@ -164,7 +167,7 @@ async function bootstrap(uid: number, charitySession = false) {
   const ordersUi = orders.map((o) => ({
     id: String(o.order_id), orderNumber: `RW-${new Date(o.ordered_at).getFullYear()}-${String(o.order_id).padStart(4, '0')}`,
     buyerId: String(o.buyer_id), listingId: String(o.item_id), totalAmount: Number(o.sale_price),
-    pickupHub: itemBy[o.item_id]?.city || 'Campus', meetingTime: 'Arrange with seller', orderStatus: o.order_status,
+    pickupHub: itemBy[o.item_id]?.city || 'Campus', meetingTime: 'Arrange with seller', orderStatus: String(o.order_status).split('|')[0], purgeBy: purgeMark(o.order_status),
     paymentStatus: 'paid', paymentMethod: 'campus_card', createdAt: iso(o.ordered_at),
   }));
 
@@ -176,7 +179,6 @@ async function bootstrap(uid: number, charitySession = false) {
       id: String(f.foundation_id), name: f.foundation_name, tagline: p?.target_beneficiaries || f.cause_area,
       description: f.description, mission: p?.program_description || f.description, category: f.cause_area,
       contactEmail: f.contact_email, phone: f.website_url || '', verified: f.status === 'active',
-      location: f.service_area || '', hostUserId: users.find((u) => u.foundation_id === f.foundation_id && roleOf(u.role) === 'charity')?.user_id?.toString(),
       logoUrl: avatar(f.foundation_name), totalKgReceived: Math.round((kgDon[f.foundation_id] || 0) * 10) / 10,
       activeCampaign: p?.program_name || 'General clothing drive',
     };
@@ -233,7 +235,7 @@ async function bootstrap(uid: number, charitySession = false) {
   };
 
   return {
-    me: String(uid), charitySession, users: usersUi,
+    me: String(uid), users: usersUi,
     categories: cats.map((c) => ({ id: 'cat-' + slug(c.category_name), name: c.category_name, slug: slug(c.category_name), description: `${c.category_name} from fellow students`, itemCount: live.filter((i) => i.category_id === c.category_id && i.status === 'available').length })),
     clothingItems: live.map(clothing), listings, orders: ordersUi, exchanges, charities, donations, reviews, impact, notifications, dropBoxes: dop.map(dropUi), messages: msgs.map(msgUi),
     wishlist: wl.map((w) => ({ id: `w-${w.wishlist_id}-${w.item_id}`, userId: String(uid), listingId: String(w.item_id), addedAt: iso(w.added_at) })),
@@ -242,25 +244,13 @@ async function bootstrap(uid: number, charitySession = false) {
 }
 
 // ---------- routes ----------
-type Ctx = { uid: number; body: any; params: string[]; isAdmin: boolean; role: Role; foundationId: number | null; charitySession: boolean };
+type Ctx = { uid: number; email?: string; body: any; params: string[]; isAdmin: boolean; role: Role; foundationId: number | null };
 const routes: [string, RegExp, (c: Ctx) => Promise<any>][] = [];
 const R = (m: string, p: string, f: (c: Ctx) => Promise<any>) => routes.push([m, new RegExp(`^${p}$`), f]);
 
 const assertOwnerOrAdmin = (ownerId: number, c: Ctx) => { if (ownerId !== c.uid && !c.isAdmin) throw new HttpError(403, 'Not allowed'); };
 
-R('GET', '/api/bootstrap', async (c) => bootstrap(c.uid, c.charitySession));
-
-// ---------- charity hosting: ONLY accounts signed in through Charity Login (token claim ch) with role=charity ----------
-R('PATCH', '/api/charity/me', async (c) => {
-  if (!c.charitySession || c.role !== 'charity' || c.foundationId == null) throw new HttpError(403, 'Only charity accounts signed in through Charity Login can manage a charity');
-  const b = c.body, sets: string[] = [], vals: any[] = [];
-  const f: [string, string, number][] = [['name', 'foundation_name', 100], ['description', 'description', 2000], ['category', 'cause_area', 50], ['location', 'service_area', 50], ['contactEmail', 'contact_email', 254], ['website', 'website_url', 255]];
-  for (const [k, col, max] of f) if (b[k] !== undefined) { const v = String(b[k]).trim().slice(0, max); if (k === 'name' && !v) throw new HttpError(400, 'Charity name required'); sets.push(`${col}=?`); vals.push(v); }
-  if (!sets.length) throw new HttpError(400, 'Nothing to update');
-  try { await q(`UPDATE charity_foundation SET ${sets.join(', ')} WHERE foundation_id=?`, [...vals, c.foundationId]); }
-  catch (e: any) { if (e.code === 'ER_DUP_ENTRY') throw new HttpError(409, 'A charity with that name already exists'); throw e; }
-  return { ok: true };
-});
+R('GET', '/api/bootstrap', async (c) => bootstrap(c.uid));
 
 R('POST', '/api/listings', async (c) => {
   const { item: it, listing: l } = c.body;
@@ -506,65 +496,218 @@ R('PATCH', '/api/dropoffs/(\\d+)', async (c) => {
   return { ok: true };
 });
 
-// ---------- admin: change a user's role (stored in user.role) ----------
+// ---------- mutual delete (after a trade / sale is finished, both people agree, then the rows are removed) ----------
+// Removes an item only if nothing else still points at it. Returns Cloudinary ids to destroy AFTER the commit.
+async function purgeItem(cn: any, id: number): Promise<string[]> {
+  const [{ n }] = await q('SELECT (SELECT COUNT(*) FROM exchange_request WHERE requested_item_id=? OR offered_item_id=?) + (SELECT COUNT(*) FROM charity_donation WHERE item_id=?) + (SELECT COUNT(*) FROM thrift_order o JOIN thrift_listing t ON t.thrift_listing_id=o.thrift_listing_id WHERE t.item_id=?) AS n', [id, id, id, id], cn);
+  if (Number(n)) return [];
+  const imgs = await q('SELECT public_id FROM clothing_item_image WHERE item_id=?', [id], cn);
+  await cn.query('UPDATE message SET item_id=NULL WHERE item_id=?', [id]);
+  await cn.query('DELETE FROM wishlist_item WHERE item_id=?', [id]);
+  await cn.query('DELETE FROM clothing_item_image WHERE item_id=?', [id]);
+  await cn.query('DELETE FROM thrift_listing WHERE item_id=?', [id]);
+  await cn.query('DELETE FROM clothing_item WHERE item_id=?', [id]);
+  return imgs.map((i) => i.public_id).filter(Boolean);
+}
+const afterPurge = (ids: string[]) => Promise.allSettled(ids.map((x) => destroyImage(x)));
+
+R('POST', '/api/exchanges/(\\d+)/purge', async (c) => {
+  const ids = await tx(async (cn) => {
+    const [r] = await q('SELECT er.*, ci.owner_id AS receiver_id, e.exchange_id, e.status AS ex_status FROM exchange_request er JOIN clothing_item ci ON ci.item_id=er.requested_item_id LEFT JOIN exchange e ON e.request_id=er.request_id WHERE er.request_id=? FOR UPDATE', [c.params[0]], cn);
+    if (!r) throw new HttpError(404, 'Not found');
+    if (c.uid !== r.requester_id && c.uid !== r.receiver_id) throw new HttpError(403, 'Not allowed');
+    const done = String(r.ex_status || '').startsWith('completed');
+    if (!done && !['declined', 'cancelled'].includes(r.status)) throw new HttpError(409, 'Only finished trades can be deleted');
+    const mark = purgeMark(r.ex_status);
+    if (done && !mark) { await cn.query('UPDATE exchange SET status=? WHERE exchange_id=?', [`completed|del:${c.uid}`, r.exchange_id]); return null; } // first agreement
+    if (done && mark === String(c.uid)) return null; // already waiting for the other person
+    const items = [r.requested_item_id, r.offered_item_id];
+    await cn.query('DELETE FROM message WHERE item_id IN (?,?) AND ((sender_id=? AND recipient_id=?) OR (sender_id=? AND recipient_id=?))', [...items, r.requester_id, r.receiver_id, r.receiver_id, r.requester_id]);
+    if (r.exchange_id) {
+      await cn.query('DELETE FROM review WHERE exchange_id=?', [r.exchange_id]);
+      await cn.query('DELETE FROM exchange WHERE exchange_id=?', [r.exchange_id]);
+    }
+    await cn.query('DELETE FROM exchange_request WHERE request_id=?', [r.request_id]);
+    const gone: string[] = [];
+    if (done) for (const it of items) gone.push(...(await purgeItem(cn, it)));
+    return gone;
+  });
+  if (ids) await afterPurge(ids);
+  return { ok: true, deleted: !!ids };
+});
+
+R('POST', '/api/orders/(\\d+)/purge', async (c) => {
+  const ids = await tx(async (cn) => {
+    const [o] = await q('SELECT o.*, t.item_id, ci.owner_id FROM thrift_order o JOIN thrift_listing t ON t.thrift_listing_id=o.thrift_listing_id JOIN clothing_item ci ON ci.item_id=t.item_id WHERE o.order_id=? FOR UPDATE', [c.params[0]], cn);
+    if (!o) throw new HttpError(404, 'Not found');
+    if (c.uid !== o.buyer_id && c.uid !== o.owner_id) throw new HttpError(403, 'Not allowed');
+    if (!String(o.order_status).startsWith('completed')) throw new HttpError(409, 'Only completed orders can be deleted');
+    const mark = purgeMark(o.order_status);
+    if (!mark) { await cn.query('UPDATE thrift_order SET order_status=? WHERE order_id=?', [`completed|del:${c.uid}`, o.order_id]); return null; }
+    if (mark === String(c.uid)) return null;
+    await cn.query('DELETE FROM message WHERE item_id=? AND ((sender_id=? AND recipient_id=?) OR (sender_id=? AND recipient_id=?))', [o.item_id, o.buyer_id, o.owner_id, o.owner_id, o.buyer_id]);
+    await cn.query('DELETE FROM review WHERE order_id=?', [o.order_id]);
+    await cn.query('DELETE FROM thrift_order WHERE order_id=?', [o.order_id]);
+    return purgeItem(cn, o.item_id);
+  });
+  if (ids) await afterPurge(ids);
+  return { ok: true, deleted: !!ids };
+});
+
+// Withdraw your own delete-agreement (only until the other person confirms)
+R('POST', '/api/(exchanges|orders)/(\\d+)/purge-cancel', async (c) => {
+  if (c.params[0] === 'exchanges') await q("UPDATE exchange SET status='completed' WHERE request_id=? AND status=?", [c.params[1], `completed|del:${c.uid}`]);
+  else await q("UPDATE thrift_order SET order_status='completed' WHERE order_id=? AND order_status=?", [c.params[1], `completed|del:${c.uid}`]);
+  return { ok: true };
+});
+
+// Unsend: only the sender can remove their own message
+R('DELETE', '/api/messages/(\\d+)', async (c) => {
+  await q('DELETE FROM message WHERE message_id=? AND sender_id=?', [c.params[0], c.uid]);
+  return { ok: true };
+});
+
+// ---------- admin: super admin, roles, audit, charities, drop-offs ----------
+const SUPER = (process.env.SUPER_ADMIN_EMAIL || 'admin@campus.edu').toLowerCase();
+let adminReady: Promise<any> | null = null;
+const adminInit = () => (adminReady ||= (async () => {
+  await q('CREATE TABLE IF NOT EXISTS admin_audit_log (log_id INT AUTO_INCREMENT PRIMARY KEY, admin_id INT NOT NULL, action VARCHAR(50) NOT NULL, target VARCHAR(100), detail VARCHAR(255), created_at DATETIME, KEY idx_aal_created (created_at))');
+  const [u] = await q('SELECT user_id FROM `user` WHERE email=?', [SUPER]);
+  if (!u) {
+    if (!process.env.SUPER_ADMIN_PASSWORD && process.env.NODE_ENV === 'production') { console.warn('SUPER_ADMIN_PASSWORD not set: super admin not created'); return; }
+    const hash = await bcrypt.hash(process.env.SUPER_ADMIN_PASSWORD || 'Admin@12345', 10); await tx(async (cn) => ins(cn, 'user', 'user_id', { location_id: await locationId(cn, 'Student Union'), name: 'Super Admin', email: SUPER, password_hash: hash, created_at: new Date(), role: await dbRole('admin') })); }
+  else await q('UPDATE `user` SET role=? WHERE user_id=?', [await dbRole('admin'), u.user_id]);
+})().catch((e) => { adminReady = null; throw e; }));
+const isSuper = (c: Ctx) => String(c.email || '').toLowerCase() === SUPER;
+const adminOnly = (c: Ctx) => { if (!c.isAdmin) throw new HttpError(403, 'Admins only'); };
+const audit = (c: Ctx, action: string, target = '', detail = '') => q('INSERT INTO admin_audit_log (admin_id,action,target,detail,created_at) VALUES (?,?,?,?,NOW())', [c.uid, action, String(target).slice(0, 100), String(detail).slice(0, 255)]);
+
+R('GET', '/api/admin/console', async (c) => {
+  adminOnly(c); await adminInit();
+  return {
+    isSuper: isSuper(c), superEmail: SUPER,
+    charities: (await q('SELECT foundation_id,foundation_name,status FROM charity_foundation ORDER BY foundation_id')).map((f) => ({ id: f.foundation_id, name: f.foundation_name, status: f.status })),
+    audit: (await q('SELECT a.log_id,a.action,a.target,a.detail,a.created_at,u.name FROM admin_audit_log a LEFT JOIN `user` u ON u.user_id=a.admin_id ORDER BY a.log_id DESC LIMIT 100')).map((l) => ({ id: l.log_id, who: l.name, action: l.action, target: l.target, detail: l.detail, at: iso(l.created_at) })),
+  };
+});
+
 R('PATCH', '/api/users/(\\d+)/role', async (c) => {
-  if (!c.isAdmin) throw new HttpError(403, 'Admins only');
+  adminOnly(c); await adminInit();
   const target = Number(c.params[0]), role = String(c.body.role) as Role;
   if (target === c.uid) throw new HttpError(400, 'You cannot change your own role');
   if (!['user', 'charity', 'admin'].includes(role)) throw new HttpError(400, 'role must be user, charity or admin');
+  const [t] = await q('SELECT email,role FROM `user` WHERE user_id=?', [target]);
+  if (!t) throw new HttpError(404, 'User not found');
+  if (String(t.email).toLowerCase() === SUPER) throw new HttpError(403, 'The super admin cannot be changed');
+  if ((role === 'admin' || roleOf(t.role) === 'admin') && !isSuper(c)) throw new HttpError(403, 'Only the super admin can appoint or remove admins');
   let foundationId: number | null = null;
   if (role === 'charity') {
     foundationId = Number(c.body.foundationId);
     if (!(await q('SELECT 1 FROM charity_foundation WHERE foundation_id=?', [foundationId])).length) throw new HttpError(400, 'Charity role needs a valid foundationId');
   }
-  const r: any = await q('UPDATE `user` SET role=?, foundation_id=? WHERE user_id=?', [await dbRole(role), foundationId, target]);
-  if (!r.affectedRows) throw new HttpError(404, 'User not found');
+  await q('UPDATE `user` SET role=?, foundation_id=? WHERE user_id=?', [await dbRole(role), foundationId, target]);
+  await audit(c, 'set_role', t.email, role);
+  return { ok: true };
+});
+
+R('DELETE', '/api/admin/users/(\\d+)', async (c) => {
+  adminOnly(c);
+  const [t] = await q('SELECT email,role FROM `user` WHERE user_id=?', [c.params[0]]);
+  if (!t) throw new HttpError(404, 'User not found');
+  if (Number(c.params[0]) === c.uid || String(t.email).toLowerCase() === SUPER || (roleOf(t.role) === 'admin' && !isSuper(c))) throw new HttpError(403, 'Not allowed');
+  try { await q('DELETE FROM `user` WHERE user_id=?', [c.params[0]]); } catch { throw new HttpError(409, 'User has activity and cannot be deleted'); }
+  await audit(c, 'delete_user', t.email); return { ok: true };
+});
+
+R('PATCH', '/api/admin/charities/(\\d+)', async (c) => {
+  adminOnly(c);
+  const st = ['active', 'pending', 'rejected'].includes(c.body.status) ? c.body.status : null;
+  if (!st) throw new HttpError(400, 'Bad status');
+  await q('UPDATE charity_foundation SET status=? WHERE foundation_id=?', [st, c.params[0]]);
+  await audit(c, st === 'active' ? 'verify_charity' : 'unverify_charity', `foundation ${c.params[0]}`, st); return { ok: true };
+});
+
+R('POST', '/api/admin/dropoffs', async (c) => {
+  adminOnly(c); const b = c.body;
+  if (!b.name?.trim()) throw new HttpError(400, 'Name required');
+  const id = await tx(async (cn) => ins(cn, 'drop_off_point', 'dropoff_id', { name: String(b.name).slice(0, 100), campus_zone: String(b.campusZone || '').slice(0, 50), building_name: String(b.buildingName || '').slice(0, 100), floor_details: String(b.floorLocation || '').slice(0, 150), operating_hours: String(b.hours || '').slice(0, 150), location_id: await locationId(cn, b.campusZone), fill_percent: 0, total_kg_collected: 0, is_active: 1, created_at: new Date(), updated_at: new Date() }));
+  await audit(c, 'create_dropoff', b.name); return { id };
+});
+
+// ---------- charity portal: verification docs + drives ----------
+let docsReady: Promise<any> | null = null;
+const docsTbl = () => (docsReady ||= q('CREATE TABLE IF NOT EXISTS charity_verification_doc (doc_id INT PRIMARY KEY, foundation_id INT NOT NULL, doc_type VARCHAR(50), file_name VARCHAR(255), mime_type VARCHAR(100), file_data LONGTEXT, review_status VARCHAR(25) DEFAULT \'pending\', admin_note VARCHAR(255), submitted_at DATETIME, reviewed_at DATETIME)'));
+const charityOnly = (c: Ctx) => { if (c.role !== 'charity' || c.foundationId == null) throw new HttpError(403, 'Charity accounts only'); return c.foundationId; };
+
+R('GET', '/api/charity/me', async (c) => {
+  const fid = charityOnly(c); await docsTbl();
+  const [f] = await q('SELECT * FROM charity_foundation WHERE foundation_id=?', [fid]);
+  return {
+    foundation: { id: fid, name: f.foundation_name, status: f.status, cause: f.cause_area, area: f.service_area, email: f.contact_email },
+    docs: (await q('SELECT doc_id,doc_type,file_name,review_status,admin_note,submitted_at FROM charity_verification_doc WHERE foundation_id=? ORDER BY doc_id DESC', [fid])).map((d) => ({ id: d.doc_id, type: d.doc_type, fileName: d.file_name, status: d.review_status, note: d.admin_note, at: iso(d.submitted_at) })),
+    programs: (await q('SELECT * FROM charity_program WHERE foundation_id=? ORDER BY program_id DESC', [fid])).map((p) => ({ id: p.program_id, name: p.program_name, description: p.program_description, beneficiaries: p.target_beneficiaries, status: p.status })),
+  };
+});
+R('POST', '/api/charity/docs', async (c) => {
+  const fid = charityOnly(c); await docsTbl(); const b = c.body;
+  if (!b.fileName || !String(b.data || '').startsWith('data:')) throw new HttpError(400, 'A file is required');
+  if (b.data.length > 3_000_000) throw new HttpError(400, 'File too large (max ~2 MB)');
+  const id = await tx((cn) => ins(cn, 'charity_verification_doc', 'doc_id', { foundation_id: fid, doc_type: String(b.type || 'Registration').slice(0, 50), file_name: String(b.fileName).slice(0, 255), mime_type: String(b.data.slice(5, b.data.indexOf(';'))).slice(0, 100), file_data: b.data, review_status: 'pending', submitted_at: new Date() }));
+  await q("UPDATE charity_foundation SET status='pending' WHERE foundation_id=? AND (status IS NULL OR status='rejected')", [fid]);
+  return { id };
+});
+R('POST', '/api/charity/programs', async (c) => {
+  const fid = charityOnly(c);
+  if (!c.body.name?.trim()) throw new HttpError(400, 'Drive name required');
+  return { id: await tx((cn) => ins(cn, 'charity_program', 'program_id', { foundation_id: fid, program_name: String(c.body.name).slice(0, 100), program_description: c.body.description || '', target_beneficiaries: String(c.body.beneficiaries || '').slice(0, 100), status: 'active' })) };
+});
+R('PATCH', '/api/charity/programs/(\\d+)', async (c) => {
+  const fid = charityOnly(c);
+  await q('UPDATE charity_program SET status=? WHERE program_id=? AND foundation_id=?', [c.body.status === 'active' ? 'active' : 'closed', c.params[0], fid]);
+  return { ok: true };
+});
+R('GET', '/api/admin/charity-docs', async (c) => {
+  if (!c.isAdmin) throw new HttpError(403, 'Admins only'); await docsTbl();
+  return (await q('SELECT d.doc_id,d.foundation_id,d.doc_type,d.file_name,d.review_status,d.admin_note,d.submitted_at,f.foundation_name,f.status AS fstatus FROM charity_verification_doc d JOIN charity_foundation f ON f.foundation_id=d.foundation_id ORDER BY d.review_status=\'pending\' DESC, d.doc_id DESC'))
+    .map((d) => ({ id: d.doc_id, foundationId: d.foundation_id, foundation: d.foundation_name, foundationStatus: d.fstatus, type: d.doc_type, fileName: d.file_name, status: d.review_status, note: d.admin_note, at: iso(d.submitted_at) }));
+});
+R('GET', '/api/admin/charity-docs/(\\d+)', async (c) => {
+  if (!c.isAdmin) throw new HttpError(403, 'Admins only'); await docsTbl();
+  const [d] = await q('SELECT file_data FROM charity_verification_doc WHERE doc_id=?', [c.params[0]]);
+  if (!d) throw new HttpError(404, 'Not found'); return { data: d.file_data };
+});
+R('PATCH', '/api/admin/charity-docs/(\\d+)', async (c) => {
+  if (!c.isAdmin) throw new HttpError(403, 'Admins only'); await docsTbl();
+  const ok = c.body.status === 'approved', [d] = await q('SELECT foundation_id FROM charity_verification_doc WHERE doc_id=?', [c.params[0]]);
+  if (!d) throw new HttpError(404, 'Not found');
+  await audit(c, ok ? 'approve_doc' : 'reject_doc', `doc ${c.params[0]}`, c.body.note || '');
+  await q('UPDATE charity_verification_doc SET review_status=?, admin_note=?, reviewed_at=NOW() WHERE doc_id=?', [ok ? 'approved' : 'rejected', String(c.body.note || '').slice(0, 255), c.params[0]]);
+  await q(ok ? "UPDATE charity_foundation SET status='active' WHERE foundation_id=?" : "UPDATE charity_foundation SET status='rejected' WHERE foundation_id=? AND status<>'active'", [d.foundation_id]);
   return { ok: true };
 });
 
 // ---------- entry ----------
 async function auth(path: string, body: any) {
+  await adminInit();
   const email = String(body.email || '').trim().toLowerCase(), pw = String(body.password || '');
-  if (path.endsWith('register-charity')) { // creates a charity host account + its public charity profile
-    const name = String(body.charityName || '').trim().slice(0, 100), desc = String(body.description || '').trim().slice(0, 2000);
-    if (!name || !desc || !email.includes('@') || pw.length < 6) throw new HttpError(400, 'Charity name, description, valid email and 6+ char password required');
-    if ((await q('SELECT 1 FROM `user` WHERE email=?', [email])).length) throw new HttpError(409, 'Email already registered');
-    if ((await q('SELECT 1 FROM charity_foundation WHERE foundation_name=?', [name])).length) throw new HttpError(409, 'A charity with that name already exists');
-    const id = await tx(async (cn) => {
-      const fid = await ins(cn, 'charity_foundation', 'foundation_id', {
-        foundation_name: name, description: desc, cause_area: String(body.category || 'Clothing').trim().slice(0, 50), service_area: String(body.location || '').trim().slice(0, 50),
-        contact_email: email, website_url: String(body.website || '').trim().slice(0, 255), status: 'active',
-      });
-      return ins(cn, 'user', 'user_id', {
-        location_id: await locationId(cn, body.location), name: name.slice(0, 50), email, password_hash: await bcrypt.hash(pw, 10), created_at: new Date(),
-        role: await dbRole('charity'), foundation_id: fid,
-      });
-    });
-    return { token: sign(id, true) };
-  }  if (path.endsWith('register')) {
+  if (path.endsWith('register')) {
     if (!body.name?.trim() || !email.includes('@') || pw.length < 6) throw new HttpError(400, 'Name, valid email and 6+ char password required');
     if ((await q('SELECT 1 FROM `user` WHERE email=?', [email])).length) throw new HttpError(409, 'Email already registered');
-    const id = await tx(async (cn) => ins(cn, 'user', 'user_id', {
-      location_id: await locationId(cn, body.campusDorm), name: String(body.name).trim().slice(0, 50), email, password_hash: await bcrypt.hash(pw, 10), created_at: new Date(),
-      role: await dbRole('user'), // public sign-up is ALWAYS a regular user; body.role is ignored
-    }));
+    const isCh = body.accountType === 'charity'; // public sign-up: regular user or charity (never admin). Charities start unverified.
+    if (isCh && !body.orgName?.trim()) throw new HttpError(400, 'Organisation name required');
+    if (isCh && (await q('SELECT 1 FROM charity_foundation WHERE foundation_name=?', [String(body.orgName).trim().slice(0, 100)])).length) throw new HttpError(409, 'A charity with this name already exists');
+    const id = await tx(async (cn) => {
+      const fid = isCh ? await ins(cn, 'charity_foundation', 'foundation_id', { foundation_name: String(body.orgName).trim().slice(0, 100), description: '', cause_area: '', service_area: '', contact_email: email, status: 'pending' }) : null;
+      return ins(cn, 'user', 'user_id', {
+        location_id: await locationId(cn, body.campusDorm), name: String(body.name).trim().slice(0, 50), email, password_hash: await bcrypt.hash(pw, 10), created_at: new Date(),
+        role: await dbRole(isCh ? 'charity' : 'user'), foundation_id: fid,
+      });
+    });
     return { token: sign(id) };
   }
-  const [u] = await q('SELECT user_id,password_hash,role,foundation_id FROM `user` WHERE email=?', [email]);
+  const [u] = await q('SELECT user_id,password_hash FROM `user` WHERE email=?', [email]);
   if (!u || !u.password_hash || !(await bcrypt.compare(pw, u.password_hash))) throw new HttpError(401, 'Invalid email or password');
-  if (body.accountType === 'charity') { // Charity Login: same credentials check, but only charity accounts pass
-    if (roleOf(u.role) !== 'charity' || u.foundation_id == null) throw new HttpError(401, 'Invalid email or password, or not a charity account');
-    return { token: sign(u.user_id, true) };
-  }
   return { token: sign(u.user_id) };
-}
-
-async function publicCharities() {
-  const rows = await q("SELECT f.*, (SELECT user_id FROM `user` u WHERE u.foundation_id=f.foundation_id LIMIT 1) AS host_id, (SELECT program_name FROM charity_program p WHERE p.foundation_id=f.foundation_id AND p.status='active' LIMIT 1) AS campaign FROM charity_foundation f WHERE f.status='active' ORDER BY f.foundation_id");
-  return rows.map((f) => ({
-    id: String(f.foundation_id), name: f.foundation_name, description: f.description || '', category: f.cause_area || '', location: f.service_area || '',
-    contactEmail: f.contact_email || '', website: f.website_url || '', logoUrl: avatar(f.foundation_name), activeCampaign: f.campaign || '', hostUserId: f.host_id ? String(f.host_id) : undefined,
-  }));
 }
 
 export async function handle(method: string, url: string, body: any, authHeader: string): Promise<[number, any]> {
@@ -572,19 +715,17 @@ export async function handle(method: string, url: string, body: any, authHeader:
     const path = (url || '').split('?')[0].replace(/\/+$/, '');
     body ||= {};
     if (path === '/api/health') return [200, { status: 'ok', db: (await q('SELECT 1 AS ok'))[0].ok === 1 }];
-    if (method === 'POST' && /^\/api\/auth\/(login|register|register-charity)$/.test(path)) return [200, await auth(path, body)];
+    if (method === 'POST' && /^\/api\/auth\/(login|register)$/.test(path)) return [200, await auth(path, body)];
 
-    if (method === 'GET' && path === '/api/public/charities') return [200, await publicCharities()]; // no sign-in needed; no private account data
-    const session = verify(authHeader.replace('Bearer ', ''));
-    if (!session) throw new HttpError(401, 'Not signed in');
-    const uid = session.uid;
-    const [me] = await q('SELECT role, foundation_id FROM `user` WHERE user_id=?', [uid]); // role re-read from DB on every request
+    const uid = verify(authHeader.replace('Bearer ', ''));
+    if (!uid) throw new HttpError(401, 'Not signed in');
+    const [me] = await q('SELECT role, foundation_id, email FROM `user` WHERE user_id=?', [uid]); // role re-read from DB on every request
     if (!me) throw new HttpError(401, 'Account no longer exists');
     const role = roleOf(me.role), isAdmin = role === 'admin';
 
     for (const [m, re, fn] of routes) {
       const hit = re.exec(path);
-      if (m === method && hit) return [200, await fn({ uid, body, params: hit.slice(1), isAdmin, role, foundationId: me.foundation_id ?? null, charitySession: session.ch })];
+      if (m === method && hit) return [200, await fn({ uid, body, params: hit.slice(1), isAdmin, role, foundationId: me.foundation_id ?? null, email: me.email })];
     }
     throw new HttpError(404, 'Route not found');
   } catch (e: any) {

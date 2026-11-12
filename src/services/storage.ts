@@ -40,22 +40,23 @@ export class StorageService {
   // ---- session ----
   static get token() { return token; }
   static setToken(t: string | null) { token = t; t ? ls?.setItem(LS('token'), t) : ls?.removeItem(LS('token')); if (!t) cache = null; }
-  static async auth(mode: 'login' | 'register' | 'register-charity', body: any) {
+  static async auth(mode: 'login' | 'register', body: any) {
     const r = await call<{ token: string }>('POST', `/auth/${mode}`, body);
     this.setToken(r.token); await this.load();
   }
+  static charityMe() { return call<any>('GET', '/charity/me'); }
+  static submitDoc(b: any) { return call('POST', '/charity/docs', b); }
+  static addProgram(b: any) { return call('POST', '/charity/programs', b); }
+  static setProgram(id: number, status: string) { return call('PATCH', `/charity/programs/${id}`, { status }); }
+  static adminDocs() { return call<any[]>('GET', '/admin/charity-docs'); }
+  static adminDocData(id: number) { return call<{ data: string }>('GET', `/admin/charity-docs/${id}`); }
+  static reviewDoc(id: number, status: string, note = '') { return call('PATCH', `/admin/charity-docs/${id}`, { status, note }); }
+  static adminConsole() { return call<any>('GET', '/admin/console'); }
+  static setUserRole(id: string, role: string, foundationId?: number) { return call('PATCH', `/users/${id}/role`, { role, foundationId }); }
+  static deleteUser(id: string) { return call('DELETE', `/admin/users/${id}`); }
+  static setCharityStatus(id: number, status: string) { return call('PATCH', `/admin/charities/${id}`, { status }); }
+  static createDropoff(b: any) { return call('POST', '/admin/dropoffs', b); }
   static async load() { cache = await call('GET', '/bootstrap'); }
-  // ---- charity hosting (only usable from a Charity Login session; enforced by the API) ----
-  static get isCharitySession(): boolean { return !!cache?.charitySession; }
-  static async updateCharity(updates: Partial<{ name: string; description: string; category: string; location: string; contactEmail: string; website: string }>) {
-    return wait(() => call('PATCH', '/charity/me', updates));
-  }
-  // public (no sign-in) charity list for the landing page
-  static async fetchPublicCharities(): Promise<CharityFoundation[]> {
-    const res = await fetch('/api/public/charities');
-    if (!res.ok) throw new Error('Could not load charities');
-    return res.json();
-  }
   static get meId(): string { return cache?.me; }
   static subscribe(fn: () => void) { listeners.add(fn); return () => { listeners.delete(fn); }; }
 
@@ -184,6 +185,13 @@ export class StorageService {
     const e = cache.exchanges.find((x: ExchangeRequest) => x.id === id); if (e) e.status = status;
     bg(call('PATCH', `/exchanges/${id}`, { status }));
     return this.getExchanges().find((x) => x.id === id)!;
+  }
+
+  // ---- mutual delete (both parties must agree; second call removes the rows) ----
+  static purge(kind: 'exchanges' | 'orders', id: string, cancel = false) { return wait(() => call<{ deleted?: boolean }>('POST', `/${kind}/${id}/${cancel ? 'purge-cancel' : 'purge'}`, {})); }
+  static async deleteMessage(id: string) {
+    cache.messages = (cache?.messages || []).filter((m: Message) => m.id !== id); notify();
+    await wait(() => call('DELETE', `/messages/${id}`));
   }
 
   // ---- charities & donations (drop boxes are a UI concept only; stored in collection_method) ----

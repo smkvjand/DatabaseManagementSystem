@@ -104,6 +104,7 @@ export interface Order {
   orderStatus: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: 'campus_card' | 'cash_on_pickup' | 'student_wallet';
+  purgeBy?: string; // user id who already agreed to delete
   createdAt: string;
   listing?: Listing;
   buyer?: User;
@@ -123,6 +124,7 @@ export interface ExchangeRequest {
   status: ExchangeStatus;
   createdAt: string;
   completedAt?: string;
+  purgeBy?: string; // user id who already agreed to delete
   requestedListing?: Listing;
   offeredItem?: ClothingItem;
   requester?: User;
@@ -142,8 +144,6 @@ export interface CharityFoundation {
   logoUrl: string;
   totalKgReceived: number;
   activeCampaign: string;
-  location?: string;
-  hostUserId?: string; // user id of the charity host account (used for messaging)
 }
 
 export type DonationStatus = 'scheduled' | 'dropped_off' | 'verified_by_council' | 'distributed';

@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const unreadNotifications = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#FAF9F6]/85 backdrop-blur-md border-b border-[#E5E5EA] transition-all">
+    <header className="fixed top-0 left-0 right-0 z-50 glass">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-6">
         {/* Left: Brand & Nav Items */}
         <div className="flex items-center gap-8">
@@ -38,8 +38,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => onNavigate('home')}
             className="flex items-center gap-2 group tracking-tight text-[#161617] font-medium text-lg hover:opacity-75 transition-opacity focus:outline-none"
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-[#161617] inline-block" />
-            <span className="tracking-[-0.03em] font-semibold">reWear</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#161617] inline-block shadow-[inset_0_1px_1px_rgba(255,255,255,.5)]" />
+            <span className="text-[19px] leading-none tracking-[-0.04em] font-semibold">reWear</span>
           </button>
 
           {/* Navigation Links */}

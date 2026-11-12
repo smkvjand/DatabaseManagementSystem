@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { CharityPortal } from './components/CharityPortal';
 import { DataProvider } from './context/DataContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -26,9 +27,9 @@ import { AuthModal } from './components/AuthModal';
 import { Listing } from './types';
 
 function MainApp() {
-  const [currentPath, setCurrentPath] = useState<string>('home');
+  const { isAdmin } = useAuth();
+  const [currentPath, setCurrentPath] = useState<string>(isAdmin ? 'admin' : 'home');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [messageWithId, setMessageWithId] = useState<string>('');
 
   // Modals state
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
@@ -55,16 +56,8 @@ function MainApp() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // open the messaging view with a given user (item owner, charity host, ...)
-  const openMessageWith = (userId?: string) => {
-    if (!userId) { window.alert('This user cannot be messaged.'); return; }
-    setSelectedListing(null);
-    setMessageWithId(userId);
-    handleNavigate('messages');
-  };
-
   return (
-    <div className="bg-[#FAF9F6] text-[#1D1D1F] min-h-screen flex flex-col justify-between selection:bg-[#1D1D1F] selection:text-white">
+    <div className="text-[#1D1D1F] min-h-screen flex flex-col justify-between selection:bg-[#1D1D1F] selection:text-white">
       {/* Apple-Style Navigation Bar */}
       <Navbar
         currentPath={currentPath}
@@ -117,7 +110,6 @@ function MainApp() {
               setDonationModalState({ isOpen: true, boxId, charityId })
             }
             onOpenImpactReport={() => setIsImpactReportOpen(true)}
-            onMessageCharity={openMessageWith}
           />
         )}
 
@@ -147,7 +139,7 @@ function MainApp() {
 
         {currentPath === 'safety' && <SafetyView onNavigate={handleNavigate} />}
 
-        {currentPath === 'messages' && <MessagesView initialWithId={messageWithId} />}
+        {currentPath === 'messages' && <MessagesView />}
       </main>
 
       {/* Apple-Style Minimal Footer */}
@@ -163,7 +155,6 @@ function MainApp() {
         onClose={() => setSelectedListing(null)}
         onOpenCheckout={(listing) => setCheckoutListing(listing)}
         onOpenExchange={(listing) => setExchangeListing(listing)}
-        onMessageOwner={openMessageWith}
       />
 
       <ListItemModal
@@ -216,11 +207,13 @@ function MainApp() {
   );
 }
 
+function Root() { const { currentUser } = useAuth(); return currentUser.role === 'charity' ? <CharityPortal /> : <MainApp />; }
+
 export default function App() {
   return (
     <AuthProvider>
       <DataProvider>
-        <MainApp />
+        <Root />
       </DataProvider>
     </AuthProvider>
   );

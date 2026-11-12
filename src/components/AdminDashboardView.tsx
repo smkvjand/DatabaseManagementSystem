@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import { AdminConsole } from './AdminConsole';
+import { AdminDocsPanel } from './AdminDocsPanel';
 import { Listing, Donation, DropBoxLocation, User } from '../types';
 
 interface AdminDashboardViewProps {
@@ -383,6 +385,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           </div>
         )}
       </div>
+      <AdminDocsPanel />
+      <AdminConsole />
     </div>
   );
 };

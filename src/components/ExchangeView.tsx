@@ -1,3 +1,4 @@
+import { PurgeButton } from './PurgeButton';
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -29,7 +30,7 @@ export const ExchangeView: React.FC<ExchangeViewProps> = ({ onNavigate, onOpenLi
   const completedExchanges = exchanges.filter(
     (e) =>
       (e.requesterId === currentUser.id || e.receiverId === currentUser.id) &&
-      (e.status === 'completed' || e.status === 'accepted' || e.status === 'declined')
+      (e.status === 'completed' || e.status === 'accepted' || e.status === 'declined' || e.status === 'cancelled')
   );
 
   const handleAction = (id: string, status: ExchangeStatus, label: string) => {
@@ -339,6 +340,9 @@ export const ExchangeView: React.FC<ExchangeViewProps> = ({ onNavigate, onOpenLi
                     >
                       Confirm Trade Hand-off
                     </button>
+                  )}
+                  {(ex.status === 'completed' || ex.status === 'declined' || ex.status === 'cancelled') && (
+                    <PurgeButton kind="exchanges" id={ex.id} purgeBy={ex.purgeBy} solo={ex.status !== 'completed'} />
                   )}
                 </div>
               ))

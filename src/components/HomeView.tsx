@@ -33,26 +33,26 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
 
           {/* Striking Typographic Headline */}
-          <h1 className="text-4xl sm:text-6xl font-semibold tracking-[-0.035em] text-[#161617] leading-[1.08] text-balance">
+          <h1 className="font-display text-[clamp(3rem,9vw,7rem)] text-[#161617] text-balance reveal">
             Good clothes deserve another life.
           </h1>
 
           {/* Short, Elegant Platform Explanation */}
-          <p className="mt-5 text-base sm:text-lg text-[#86868B] font-normal leading-relaxed max-w-xl text-balance">
+          <p className="mt-6 text-lg sm:text-xl text-[#6e6e73] reveal reveal-2 font-normal leading-relaxed max-w-xl text-balance">
             A student marketplace to buy, swap, and donate pre-loved clothing across campus.
           </p>
 
           {/* Understated Action Buttons */}
-          <div className="mt-7 flex items-center justify-center gap-3">
+          <div className="mt-9 flex items-center justify-center gap-3 reveal reveal-3">
             <button
               onClick={() => onNavigate('browse-clothes')}
-              className="px-5 py-2.5 rounded-full bg-[#161617] text-white text-[13px] font-medium tracking-tight hover:bg-black/90 transition-all cursor-pointer"
+              className="px-6 py-3 rounded-full bg-[#161617] text-white text-[14px] shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)] font-medium tracking-tight hover:bg-black/90 transition-all cursor-pointer"
             >
               Explore clothing
             </button>
             <button
               onClick={onOpenListItem}
-              className="px-5 py-2.5 rounded-full bg-transparent border border-[#E5E5EA] text-[#161617] text-[13px] font-medium tracking-tight hover:bg-[#F5F5F7] transition-all cursor-pointer"
+              className="px-6 py-3 rounded-full bg-white/60 backdrop-blur border border-[#E5E5EA] text-[#161617] text-[14px] font-medium tracking-tight hover:bg-white transition-all cursor-pointer"
             >
               List an item
             </button>
@@ -60,11 +60,11 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
 
         {/* Cinematic 16:9 Hero Lifestyle Photograph */}
-        <div className="mt-14 sm:mt-16 relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-[#E5E5EA]/70 shadow-sm bg-[#F5F5F7]">
+        <div className="mt-14 sm:mt-20 relative w-full aspect-[16/9] rounded-[28px] overflow-hidden ring-1 ring-black/5 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.35)] bg-[#F5F5F7] grain reveal reveal-4">
           <img
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHBwC1IeWAu1MAtkCdOAT_E7sJRGMjoNb1Up7EmUJm7VCdy_GI9b8XzEm5JDI6sSimqAZ3ZcFn8AnD-i9sP7K6kvrykSIxEetwKO2yZw9BHAGOHgrRwQpADYtujvRe8Qn7CPqemPe_KPJOYoHlTIcTgtd6NBESrgK2vst7NW1oFQY9QanJZ1VETDM78aAkOx_WNsPO9GPbUfKJMqKj7rXZsn2HW65wv4-YCTcwj6Vb7BMxmiXYaP7l"
             alt="Two students wearing timeless minimalist second-hand clothing conversing in natural soft light on campus"
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-center settle"
           />
           <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur-md border border-white/40 text-[12px] text-[#161617] font-medium shadow-xs">
             Campus Quad • Fall Collection
@@ -73,18 +73,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* Three Focused Core Pillars: Apple Less But Better */}
-      <section className="border-y border-[#E5E5EA] bg-white/50 py-16 sm:py-24">
+      <section className="border-y border-black/5 bg-white/60 py-20 sm:py-28 scroll-reveal">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-10">
             {/* Pillar: Buy */}
             <div
               onClick={() => onNavigate('browse-clothes')}
-              className="flex flex-col cursor-pointer group"
+              className="flex flex-col cursor-pointer group lift rounded-3xl p-2 -m-2"
             >
               <span className="text-[12px] font-semibold tracking-wider uppercase text-[#86868B] mb-2">
                 01 / Peer thrift
               </span>
-              <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-[#161617] group-hover:text-black">
+              <h3 className="font-display text-3xl sm:text-4xl text-[#161617]">
                 Buy Pre-Loved
               </h3>
               <p className="mt-3 text-[14px] text-[#86868B] leading-relaxed font-normal">
@@ -99,12 +99,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {/* Pillar: Exchange */}
             <div
               onClick={() => onNavigate('exchanges')}
-              className="flex flex-col cursor-pointer group"
+              className="flex flex-col cursor-pointer group lift rounded-3xl p-2 -m-2"
             >
               <span className="text-[12px] font-semibold tracking-wider uppercase text-[#86868B] mb-2">
                 02 / Zero cash
               </span>
-              <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-[#161617] group-hover:text-black">
+              <h3 className="font-display text-3xl sm:text-4xl text-[#161617]">
                 Exchange Clothes
               </h3>
               <p className="mt-3 text-[14px] text-[#86868B] leading-relaxed font-normal">
@@ -119,12 +119,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {/* Pillar: Donate */}
             <div
               onClick={() => onNavigate('charity')}
-              className="flex flex-col cursor-pointer group"
+              className="flex flex-col cursor-pointer group lift rounded-3xl p-2 -m-2"
             >
               <span className="text-[12px] font-semibold tracking-wider uppercase text-[#86868B] mb-2">
                 03 / Giving back
               </span>
-              <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-[#161617] group-hover:text-black">
+              <h3 className="font-display text-3xl sm:text-4xl text-[#161617]">
                 Donate for Good
               </h3>
               <p className="mt-3 text-[14px] text-[#86868B] leading-relaxed font-normal">
@@ -146,7 +146,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <span className="text-[12px] font-medium tracking-wide uppercase text-[#86868B]">
               Campus Inventory
             </span>
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#161617] mt-1">
+            <h2 className="font-display text-4xl sm:text-5xl text-[#161617] mt-2">
               Featured pre-loved pieces.
             </h2>
           </div>
@@ -175,12 +175,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       {/* Campus Charity & Impact: Quiet Authoritative Banner */}
       <section className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="rounded-2xl bg-[#161617] text-white p-8 sm:p-14 border border-black/10 flex flex-col lg:flex-row lg:items-center justify-between gap-10">
+        <div className="rounded-[28px] bg-[#161617] text-white p-8 sm:p-16 scroll-reveal border border-black/10 flex flex-col lg:flex-row lg:items-center justify-between gap-10">
           <div className="max-w-xl">
             <span className="text-[11px] font-semibold tracking-wider uppercase text-white/50">
               Semester Milestone
             </span>
-            <h3 className="text-3xl sm:text-4xl font-semibold tracking-tight text-white mt-2">
+            <h3 className="font-display text-4xl sm:text-6xl text-white mt-3">
               {impactReport.textileWasteKgDiverted.toLocaleString()} kg of textile waste diverted this semester.
             </h3>
             <p className="text-[14px] text-white/70 leading-relaxed font-normal mt-3">

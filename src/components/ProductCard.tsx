@@ -37,11 +37,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ listing, onSelect }) =
       onClick={() => onSelect(listing)}
       className="group flex flex-col cursor-pointer text-left focus:outline-none"
     >
-      <div className="relative aspect-[4/5] w-full rounded-xl overflow-hidden bg-[#F5F5F7] border border-[#E5E5EA]/60 transition-all">
+      <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden bg-[#F5F5F7] ring-1 ring-black/5 lift">
         <img
           src={cloth.images[0] || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80'}
           alt={cloth.title}
-          className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out"
+          className="w-full h-full object-cover group-hover:scale-[1.05] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
           loading="lazy"
         />
 

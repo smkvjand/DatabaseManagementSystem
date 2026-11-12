@@ -1,3 +1,4 @@
+import { PurgeButton } from './PurgeButton';
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -353,6 +354,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                       >
                         Leave Review
                       </button>
+                      {order.orderStatus === 'completed' && <PurgeButton kind="orders" id={order.id} purgeBy={order.purgeBy} />}
                     </div>
                   </div>
                 </div>
@@ -362,6 +364,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 No orders yet. Discover items in the catalog to schedule your first campus pickup!
               </div>
             )}
+            {mySales.filter((o) => o.orderStatus === 'completed').map((o) => (
+              <div key={o.id} className="p-4 rounded-2xl bg-white border border-[#E5E5EA] flex items-center justify-between gap-4">
+                <div className="text-[13px]"><span className="text-[11px] uppercase tracking-wider text-[#86868B] mr-2">Sold</span><span className="font-medium text-[#161617]">{o.listing?.clothingItem?.title}</span> · ${o.totalAmount}</div>
+                <PurgeButton kind="orders" id={o.id} purgeBy={o.purgeBy} />
+              </div>
+            ))}
           </div>
         )}
 

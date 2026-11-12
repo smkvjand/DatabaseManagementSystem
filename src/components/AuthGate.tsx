@@ -1,65 +1,48 @@
 import React, { useState } from 'react';
 import { StorageService } from '../services/storage';
 
-interface AuthGateProps { onDone: () => void; initialAccount?: 'user' | 'charity'; onBack?: () => void; }
-
-export const AuthGate: React.FC<AuthGateProps> = ({ onDone, initialAccount = 'user', onBack }) => {
-  const [account, setAccount] = useState<'user' | 'charity'>(initialAccount);
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [f, setF] = useState({ name: '', email: '', password: '', campusDorm: 'Student Union', charityName: '', description: '', category: 'Clothing', location: '', website: '' });
+export const AuthGate: React.FC<{ onDone: () => void; onClose?: () => void; initial?: 'login' | 'register'; as?: 'charity' | 'admin' }> = ({ onDone, onClose, initial = 'login', as }) => {
+  const [mode, setMode] = useState<'login' | 'register'>(as === 'admin' ? 'login' : initial);
+  const [f, setF] = useState({ name: '', orgName: '', email: '', password: '', campusDorm: 'Student Union' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
-  const isCharity = account === 'charity';
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
+  const reg = mode === 'register';
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setErr(''); setBusy(true);
     try {
-      if (isCharity) await StorageService.auth(mode === 'login' ? 'login' : 'register-charity', mode === 'login' ? { email: f.email, password: f.password, accountType: 'charity' } : f);
-      else await StorageService.auth(mode, f);
+      await StorageService.auth(mode, as === 'charity' && reg ? { ...f, accountType: 'charity' } : f);
+      if (as && !reg && StorageService.getUsers().find((u) => u.id === StorageService.meId)?.role !== as) { StorageService.setToken(null); throw new Error(`This account is not a${as === 'admin' ? 'n admin' : ' charity'} account`); }
       onDone();
     }
     catch (x: any) { setErr(x.message); } finally { setBusy(false); }
   };
-  const inp = 'w-full border border-[#E5E5EA] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#161617]';
-  const tab = (a: 'user' | 'charity') => `flex-1 py-2 text-[13px] font-medium rounded-full cursor-pointer ${account === a ? 'bg-[#161617] text-white' : 'text-[#86868B] hover:text-[#161617]'}`;
-  const switchAccount = (a: 'user' | 'charity') => { setAccount(a); setMode('login'); setErr(''); };
+  const inp = 'w-full px-4 py-3 text-[15px]';
+  const title = as === 'charity' ? (reg ? 'Register your charity' : 'Charity sign in') : as === 'admin' ? 'Admin sign in' : reg ? 'Create your account' : 'Sign in to reWear';
+  const sub = as === 'charity' ? (reg ? 'You can verify your documents after signing up.' : 'For charity partners.') : as === 'admin' ? 'For reWear administrators.' : reg ? 'Join your campus wardrobe.' : 'Welcome back.';
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center p-4">
-      <form onSubmit={submit} className="bg-white rounded-2xl border border-[#E5E5EA] shadow-xl w-full max-w-sm p-8 space-y-4">
-        {onBack && <button type="button" onClick={onBack} className="text-[12px] text-[#86868B] hover:text-[#161617] cursor-pointer">← Back</button>}
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-800">reWear</div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[#161617]">
-            {isCharity ? (mode === 'login' ? 'Charity login' : 'Register your charity') : mode === 'login' ? 'Sign in' : 'Create account'}
-          </h1>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm reveal" onClick={onClose}>
+      <form onSubmit={submit} onClick={(e) => e.stopPropagation()} className="glass-panel w-full max-w-[380px] p-8 space-y-3.5">
+        <div className="pb-2 text-center">
+          <div className="mx-auto mb-4 w-11 h-11 rounded-[14px] bg-[#161617] shadow-[inset_0_1px_1px_rgba(255,255,255,.35),0_8px_20px_-6px_rgba(0,0,0,.5)] flex items-center justify-center"><span className="w-3 h-3 rounded-full bg-white" /></div>
+          <h1 className="text-[26px] font-semibold tracking-[-0.03em] text-[#161617]">{title}</h1>
+          <p className="text-[14px] text-[#6e6e73] mt-1">{sub}</p>
         </div>
-        <div className="flex gap-1 p-1 rounded-full bg-[#F5F5F7]">
-          <button type="button" className={tab('user')} onClick={() => switchAccount('user')}>User Login</button>
-          <button type="button" className={tab('charity')} onClick={() => switchAccount('charity')}>Charity Login</button>
-        </div>
-        {!isCharity && mode === 'register' && <input className={inp} placeholder="Full name" value={f.name} onChange={set('name')} required />}
-        {isCharity && mode === 'register' && (
-          <>
-            <input className={inp} placeholder="Charity name" value={f.charityName} onChange={set('charityName')} required maxLength={100} />
-            <textarea className={inp} placeholder="Short description of your charity" value={f.description} onChange={set('description')} required rows={3} maxLength={2000} />
-            <input className={inp} placeholder="Cause (e.g. Clothing, Shelter)" value={f.category} onChange={set('category')} maxLength={50} />
-            <input className={inp} placeholder="Location (city / area)" value={f.location} onChange={set('location')} maxLength={25} />
-            <input className={inp} placeholder="Website (optional)" value={f.website} onChange={set('website')} maxLength={255} />
-          </>
-        )}
-        <input className={inp} type="email" placeholder={isCharity ? 'Charity email' : 'Email'} value={f.email} onChange={set('email')} required />
-        <input className={inp} type="password" placeholder="Password (min 6)" value={f.password} onChange={set('password')} required />
-        {!isCharity && mode === 'register' && <input className={inp} placeholder="Campus location / dorm" value={f.campusDorm} onChange={set('campusDorm')} />}
-        {err && <div className="text-[13px] text-red-600">{err}</div>}
-        <button disabled={busy} className="w-full bg-[#161617] text-white rounded-full py-2.5 text-sm font-medium disabled:opacity-60 cursor-pointer">
-          {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Register'}
+        {as === 'charity' && reg && <input className={inp} placeholder="Organisation name" value={f.orgName} onChange={set('orgName')} required />}
+        {reg && <input className={inp} placeholder={as === 'charity' ? 'Your name (representative)' : 'Full name'} value={f.name} onChange={set('name')} required />}
+        <input className={inp} type="email" placeholder="Email" value={f.email} onChange={set('email')} required />
+        <input className={inp} type="password" placeholder="Password" value={f.password} onChange={set('password')} required minLength={6} />
+        {reg && !as && <input className={inp} placeholder="Dorm or campus location" value={f.campusDorm} onChange={set('campusDorm')} />}
+        {err && <div className="text-[13px] text-red-600 text-center">{err}</div>}
+        <button disabled={busy} className="w-full bg-[#161617] text-white rounded-full py-3 text-[15px] font-medium disabled:opacity-60 cursor-pointer">
+          {busy ? 'One moment…' : reg ? 'Create account' : 'Continue'}
         </button>
-        <button type="button" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErr(''); }} className="w-full text-[13px] text-[#86868B] hover:text-[#161617] cursor-pointer">
-          {mode === 'login' ? (isCharity ? 'New charity? Register' : 'New here? Create an account') : 'Have an account? Sign in'}
-        </button>
-        <p className="text-[11px] text-[#86868B] text-center">Demo users (after seeding): alex@campus.edu / password123</p>
+        {as !== 'admin' && <button type="button" onClick={() => { setMode(reg ? 'login' : 'register'); setErr(''); }} className="w-full text-[13px] text-[#6e6e73] hover:text-[#161617] cursor-pointer py-1">
+          {reg ? 'Already have an account? Sign in' : "Don't have an account? Create one"}
+        </button>}
+        {onClose && <button type="button" onClick={onClose} aria-label="Close" className="absolute top-4 right-4 w-8 h-8 rounded-full text-[#6e6e73] cursor-pointer">✕</button>}
       </form>
     </div>
   );

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS location (
 );
 CREATE TABLE IF NOT EXISTS `user` (
   user_id INT PRIMARY KEY, location_id INT, name VARCHAR(50), email VARCHAR(254) UNIQUE KEY,
-  password_hash VARCHAR(255), created_at DATETIME,
+  password_hash VARCHAR(255), role ENUM('user','charity','admin') NOT NULL DEFAULT 'user', foundation_id INT NULL, created_at DATETIME,
   FOREIGN KEY (location_id) REFERENCES location(location_id)
 );
 CREATE TABLE IF NOT EXISTS category (category_id INT PRIMARY KEY, category_name VARCHAR(25) UNIQUE KEY);
@@ -70,4 +70,22 @@ CREATE TABLE IF NOT EXISTS clothing_item_image (
   position INT DEFAULT 0, is_primary BOOLEAN DEFAULT FALSE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_clothing_item_image_public_id (public_id),
   FOREIGN KEY (item_id) REFERENCES clothing_item(item_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS charity_verification_doc (
+  doc_id INT PRIMARY KEY, foundation_id INT NOT NULL, doc_type VARCHAR(50), file_name VARCHAR(255), mime_type VARCHAR(100),
+  file_data LONGTEXT, review_status VARCHAR(25) DEFAULT 'pending', admin_note VARCHAR(255), submitted_at DATETIME, reviewed_at DATETIME,
+  KEY idx_cvd_foundation (foundation_id)
+);
+
+CREATE TABLE IF NOT EXISTS drop_off_point (
+  dropoff_id INT PRIMARY KEY, name VARCHAR(100), campus_zone VARCHAR(50), building_name VARCHAR(100), floor_details VARCHAR(150),
+  address_line VARCHAR(255), location_id INT, latitude DECIMAL(9,6), longitude DECIMAL(9,6), operating_hours VARCHAR(150),
+  fill_percent INT DEFAULT 0, total_kg_collected DECIMAL(8,2) DEFAULT 0, last_emptied_at DATETIME, is_active TINYINT(1) DEFAULT 1,
+  created_at DATETIME, updated_at DATETIME
+);
+
+CREATE TABLE IF NOT EXISTS message (
+  message_id BIGINT PRIMARY KEY, sender_id INT, recipient_id INT, item_id INT, body VARCHAR(1000), sent_at DATETIME, read_at DATETIME,
+  KEY idx_msg_recipient (recipient_id), KEY idx_msg_sender (sender_id)
 );
