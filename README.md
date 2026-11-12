@@ -200,6 +200,8 @@ Vercel limits request bodies to about 4.5 MB, so keep each image upload request 
 ## Contributors:
 - Srimuralikrishna V Jandhyala: Made the draft of the frontend. Used AI to create the frontend and react structures and project structure. Created the tables for User based in MySQL database and also the User information. Hosted the website on Vercel using the Github to store the files. Hosted and managed the database on Cloud using TiDB. Connected the Database and the frontend vercel hosted website and also the backend. Made the UI into Apple Design. Helped in the population of data in the database. Created the pages of charity, messages, marketplace and also the admin pages and the charity pages with the help of AI.
 
+- Revan Masanam: Contributed to the database design and planning of the ReWear platform. Helped in identifying the required entities, attributes, and relationships between different tables in the MySQL database. Worked on understanding and organizing the database structure, including primary keys, foreign keys, and relationships between users, clothing listings, exchanges, and donations. Participated in discussions regarding the implementation of different features and improvements to the existing system. Helped in identifying issues and suggesting improvements to the marketplace, messaging, and charity functionalities. Contributed to testing the application and verifying the working of different features.
+
 ---
 
 <div align="center">
