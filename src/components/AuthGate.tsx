@@ -3,14 +3,16 @@ import { StorageService } from '../services/storage';
 
 export const AuthGate: React.FC<{ onDone: () => void; onClose?: () => void; initial?: 'login' | 'register'; as?: 'charity' | 'admin' }> = ({ onDone, onClose, initial = 'login', as }) => {
   const [mode, setMode] = useState<'login' | 'register'>(as === 'admin' ? 'login' : initial);
-  const [f, setF] = useState({ name: '', orgName: '', email: '', password: '', campusDorm: 'Student Union' });
+  const [f, setF] = useState({ name: '', orgName: '', email: '', password: '', confirm: '', campusDorm: 'Student Union' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
   const reg = mode === 'register';
 
   const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); setErr(''); setBusy(true);
+    e.preventDefault(); setErr('');
+    if (reg && f.password !== f.confirm) return setErr('Passwords do not match');
+    setBusy(true);
     try {
       await StorageService.auth(mode, as === 'charity' && reg ? { ...f, accountType: 'charity' } : f);
       if (as && !reg && StorageService.getUsers().find((u) => u.id === StorageService.meId)?.role !== as) { StorageService.setToken(null); throw new Error(`This account is not a${as === 'admin' ? 'n admin' : ' charity'} account`); }
@@ -34,6 +36,7 @@ export const AuthGate: React.FC<{ onDone: () => void; onClose?: () => void; init
         {reg && <input className={inp} placeholder={as === 'charity' ? 'Your name (representative)' : 'Full name'} value={f.name} onChange={set('name')} required />}
         <input className={inp} type="email" placeholder="Email" value={f.email} onChange={set('email')} required />
         <input className={inp} type="password" placeholder="Password" value={f.password} onChange={set('password')} required minLength={6} />
+        {reg && <input className={inp} type="password" placeholder="Confirm password" value={f.confirm} onChange={set('confirm')} required minLength={6} />}
         {reg && !as && <input className={inp} placeholder="Dorm or campus location" value={f.campusDorm} onChange={set('campusDorm')} />}
         {err && <div className="text-[13px] text-red-600 text-center">{err}</div>}
         <button disabled={busy} className="w-full bg-[#161617] text-white rounded-full py-3 text-[15px] font-medium disabled:opacity-60 cursor-pointer">

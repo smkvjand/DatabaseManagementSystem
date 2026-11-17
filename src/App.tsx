@@ -26,9 +26,24 @@ import { AuthModal } from './components/AuthModal';
 
 import { Listing } from './types';
 
+const toUrl = (p: string) =>
+  p === 'home' ? '/' : p.startsWith('browse-clothes') ? '/explore' + p.slice(14) : '/' + p;
+const fromUrl = (): string | null => {
+  const path = window.location.pathname.replace(/\/+$/, '');
+  if (!path) return null;
+  if (path === '/explore') return 'browse-clothes' + window.location.search;
+  return path.slice(1);
+};
+
 function MainApp() {
   const { isAdmin } = useAuth();
-  const [currentPath, setCurrentPath] = useState<string>(isAdmin ? 'admin' : 'home');
+  const [currentPath, setCurrentPath] = useState<string>(() => fromUrl() || (isAdmin ? 'admin' : 'home'));
+
+  useEffect(() => {
+    const f = () => setCurrentPath(fromUrl() || 'home');
+    window.addEventListener('popstate', f);
+    return () => window.removeEventListener('popstate', f);
+  }, []);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Modals state
@@ -53,6 +68,7 @@ function MainApp() {
   // Handle URL hash changes or smooth navigation
   const handleNavigate = (path: string) => {
     setCurrentPath(path);
+    window.history.pushState(null, '', toUrl(path));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

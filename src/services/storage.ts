@@ -44,6 +44,8 @@ export class StorageService {
     const r = await call<{ token: string }>('POST', `/auth/${mode}`, body);
     this.setToken(r.token); await this.load();
   }
+  static changePassword(current: string, next: string) { return call('POST', '/me/password', { current, next }); }
+  static deleteAccount(password: string) { return call('POST', '/me/delete', { password }); }
   static charityMe() { return call<any>('GET', '/charity/me'); }
   static submitDoc(b: any) { return call('POST', '/charity/docs', b); }
   static addProgram(b: any) { return call('POST', '/charity/programs', b); }

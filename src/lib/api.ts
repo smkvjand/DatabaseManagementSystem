@@ -460,6 +460,38 @@ const contactInit = () => (contactReady ||= (async () => {
 })().catch((e) => { contactReady = null; throw e; }));
 const kindCol = (k: string) => (k === 'phone' ? 'phone' : k === 'instagram' ? 'instagram' : null);
 
+R('POST', '/api/me/password', async (c) => {
+  const cur = String(c.body.current || ''), nw = String(c.body.next || '');
+  if (nw.length < 6) throw new HttpError(400, 'New password must be 6+ characters');
+  const [u] = await q('SELECT password_hash FROM `user` WHERE user_id=?', [c.uid]);
+  if (!u?.password_hash || !(await bcrypt.compare(cur, u.password_hash))) throw new HttpError(401, 'Current password is wrong');
+  await q('UPDATE `user` SET password_hash=? WHERE user_id=?', [await bcrypt.hash(nw, 10), c.uid]);
+  return { ok: true };
+});
+
+R('POST', '/api/me/delete', async (c) => {
+  await contactInit();
+  const [u] = await q('SELECT email,role,password_hash FROM `user` WHERE user_id=?', [c.uid]);
+  if (!u?.password_hash || !(await bcrypt.compare(String(c.body.password || ''), u.password_hash))) throw new HttpError(401, 'Password is wrong');
+  if (roleOf(u.role) === 'admin' || String(u.email).toLowerCase() === SUPER) throw new HttpError(403, 'Admin accounts cannot be self-deleted');
+  const gone: string[] = [];
+  await tx(async (cn) => {
+    const mine = (await q('SELECT item_id FROM clothing_item WHERE owner_id=?', [c.uid], cn)).map((r) => r.item_id);
+    for (const id of mine) gone.push(...(await purgeItem(cn, id)));
+    await cn.query('DELETE FROM wishlist_item WHERE wishlist_id IN (SELECT wishlist_id FROM wishlist WHERE user_id=?)', [c.uid]);
+    await cn.query('DELETE FROM wishlist WHERE user_id=?', [c.uid]);
+    await cn.query('DELETE FROM user_preference WHERE user_id=?', [c.uid]);
+    await cn.query('DELETE FROM message WHERE sender_id=? OR recipient_id=?', [c.uid, c.uid]);
+    await cn.query('DELETE FROM contact_request WHERE requester_id=? OR recipient_id=?', [c.uid, c.uid]).catch(() => {});
+    try { await cn.query('DELETE FROM `user` WHERE user_id=?', [c.uid]); }
+    catch { // still referenced by trades/orders/donations: anonymise so history stays intact
+      await cn.query("UPDATE `user` SET name='Deleted user', email=?, password_hash='', bio='' WHERE user_id=?", [`deleted-${c.uid}@deleted.invalid`, c.uid]);
+    }
+  });
+  await afterPurge(gone);
+  return { ok: true };
+});
+
 R('PATCH', '/api/me', async (c) => { await contactInit(); return tx(async (cn) => {
   if (c.body.name) await cn.query('UPDATE `user` SET name=? WHERE user_id=?', [String(c.body.name).slice(0, 50), c.uid]);
   if (c.body.campusDorm) await cn.query('UPDATE `user` SET location_id=? WHERE user_id=?', [await locationId(cn, c.body.campusDorm), c.uid]);
